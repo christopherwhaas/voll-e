@@ -1,22 +1,23 @@
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { Text, Button, TextInput, List, useTheme, Menu } from 'react-native-paper';
+import { Text, Button, TextInput, List, useTheme, Menu, IconButton } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { SkillLevel, TeamSize, Position, EMOJI_LIST } from './models/types';
+import { SkillLevel, TeamSize, EMOJI_LIST } from './models/types';
+import { useAppState } from './models/AppStateContext';
+import { sharedStyles, screenHeight } from './styles/shared';
 
 const skillLevels: SkillLevel[] = ['New', 'Beginner', 'Intermediate', 'Advanced', 'Jules'];
 const teamSizes: TeamSize[] = ['Any', 'Small', 'Large'];
-const positions: Position[] = ['Any', 'Hitter', 'Setter', 'Libero', 'Blocker'];
 
 const schema = yup.object({
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
   skillLevel: yup.mixed<SkillLevel>().oneOf(skillLevels).required(),
   teamSizePreference: yup.mixed<TeamSize>().oneOf(teamSizes).required(),
-  preferredPosition: yup.mixed<Position>().oneOf(positions).required(),
   emoji: yup.string().oneOf(EMOJI_LIST).required(),
+  teammatePreference: yup.string().defined(),
 });
 
 export interface PlayerFormValues {
@@ -24,12 +25,12 @@ export interface PlayerFormValues {
   lastName: string;
   skillLevel: SkillLevel;
   teamSizePreference: TeamSize;
-  preferredPosition: Position;
   emoji: string;
+  teammatePreference: string;
 }
 
 interface PlayerFormProps {
-  initialValues?: Partial<PlayerFormValues>;
+  initialValues?: Partial<PlayerFormValues> & { id?: string };
   onSubmit: (values: PlayerFormValues) => void;
   onCancel: () => void;
   title?: string;
@@ -38,18 +39,20 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player' }: PlayerFormProps) {
   const { colors } = useTheme();
-  const { control, handleSubmit, reset, setValue } = useForm<PlayerFormValues>({
+  const { players } = useAppState();
+  const { control, handleSubmit, reset, setValue, watch } = useForm<PlayerFormValues>({
     resolver: yupResolver(schema),
     defaultValues: {
       firstName: '',
       lastName: '',
       skillLevel: 'New',
       teamSizePreference: 'Any',
-      preferredPosition: 'Any',
       emoji: EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)],
+      teammatePreference: initialValues?.teammatePreference ?? '',
       ...initialValues,
     },
   });
+  const currentId = initialValues?.id ?? '';
 
   React.useEffect(() => {
     if (initialValues) {
@@ -66,175 +69,216 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
   const [skillMenuWidth, setSkillMenuWidth] = React.useState(0);
   const [sizeMenuVisible, setSizeMenuVisible] = React.useState(false);
   const [sizeMenuWidth, setSizeMenuWidth] = React.useState(0);
-  const [positionMenuVisible, setPositionMenuVisible] = React.useState(false);
-  const [positionMenuWidth, setPositionMenuWidth] = React.useState(0);
+  const [teammateMenuVisible, setTeammateMenuVisible] = React.useState(false);
+  const [teammateMenuWidth, setTeammateMenuWidth] = React.useState(0);
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <Text variant="titleMedium" style={{ marginBottom: 8 }}>{title}</Text>
-        <Controller
-          control={control}
-          name="firstName"
-          render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <TextInput
-              label="First Name"
-              value={value}
-              onChangeText={onChange}
-              error={!!error}
-              style={styles.input}
-            />
-          )}
-        />
-        <Controller
-          control={control}
-          name="lastName"
-          render={({ field: { onChange, value }, fieldState: { error } }) => (
-            <TextInput
-              label="Last Name"
-              value={value}
-              onChangeText={onChange}
-              error={!!error}
-              style={styles.input}
-            />
-          )}
-        />
-        {/* Skill Level Dropdown */}
-        <Controller
-          control={control}
-          name="skillLevel"
-          render={({ field: { onChange, value } }) => (
-            <List.Section>
-              <List.Subheader>Skill Level</List.Subheader>
-              <View
+      <ScrollView 
+        contentContainerStyle={[{ flexGrow: 1 }, sharedStyles.modalContentStyle]} 
+        keyboardShouldPersistTaps="handled" 
+        showsVerticalScrollIndicator={false}
+        style={sharedStyles.modalScrollView}
+      >
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+          <View style={sharedStyles.modalHeader}>
+            <Text variant="titleLarge" style={{
+              ...sharedStyles.modalTitle,
+              color: colors.onBackground
+            }}>{title}</Text>
+
+          </View>
+          <Controller
+            control={control}
+            name="firstName"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextInput
+                label="First Name"
+                value={value}
+                onChangeText={onChange}
+                error={!!error}
                 style={styles.input}
-                onLayout={e => setSkillMenuWidth(e.nativeEvent.layout.width)}
-              >
-                <Menu
-                  visible={skillMenuVisible}
-                  onDismiss={() => setSkillMenuVisible(false)}
-                  anchor={
-                    <Button
-                      mode="outlined"
-                      onPress={() => setSkillMenuVisible(true)}
-                      style={{ width: '100%' }}
-                    >
-                      {value}
-                    </Button>
-                  }
-                  contentStyle={{ width: skillMenuWidth }}
-                >
-                  {skillLevels.map(level => (
-                    <Menu.Item key={level} onPress={() => { onChange(level); setSkillMenuVisible(false); }} title={level} />
-                  ))}
-                </Menu>
-              </View>
-            </List.Section>
-          )}
-        />
-        {/* Team Size Dropdown */}
-        <Controller
-          control={control}
-          name="teamSizePreference"
-          render={({ field: { onChange, value } }) => (
-            <List.Section>
-              <List.Subheader>Team Size Preference</List.Subheader>
-              <View
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="lastName"
+            render={({ field: { onChange, value }, fieldState: { error } }) => (
+              <TextInput
+                label="Last Name"
+                value={value}
+                onChangeText={onChange}
+                error={!!error}
                 style={styles.input}
-                onLayout={e => setSizeMenuWidth(e.nativeEvent.layout.width)}
-              >
-                <Menu
-                  visible={sizeMenuVisible}
-                  onDismiss={() => setSizeMenuVisible(false)}
-                  anchor={
-                    <Button
-                      mode="outlined"
-                      onPress={() => setSizeMenuVisible(true)}
-                      style={{ width: '100%' }}
-                    >
-                      {value || 'Any'}
-                    </Button>
-                  }
-                  contentStyle={{ width: sizeMenuWidth }}
+              />
+            )}
+          />
+          {/* Skill Level Dropdown */}
+          <Controller
+            control={control}
+            name="skillLevel"
+            render={({ field: { onChange, value } }) => (
+              <List.Section>
+                <List.Subheader>Skill Level</List.Subheader>
+                <View
+                  style={styles.input}
+                  onLayout={e => setSkillMenuWidth(e.nativeEvent.layout.width)}
                 >
-                  {teamSizes.map(size => (
-                    <Menu.Item key={size} onPress={() => { onChange(size); setSizeMenuVisible(false); }} title={size} />
-                  ))}
-                </Menu>
-              </View>
-            </List.Section>
-          )}
-        />
-        {/* Position Dropdown */}
-        <Controller
-          control={control}
-          name="preferredPosition"
-          render={({ field: { onChange, value } }) => (
-            <List.Section>
-              <List.Subheader>Preferred Position</List.Subheader>
-              <View
-                style={styles.input}
-                onLayout={e => setPositionMenuWidth(e.nativeEvent.layout.width)}
-              >
-                <Menu
-                  visible={positionMenuVisible}
-                  onDismiss={() => setPositionMenuVisible(false)}
-                  anchor={
-                    <Button
-                      mode="outlined"
-                      onPress={() => setPositionMenuVisible(true)}
-                      style={{ width: '100%' }}
-                    >
-                      {value || 'Any'}
-                    </Button>
-                  }
-                  contentStyle={{ width: positionMenuWidth }}
-                >
-                  {positions.map(pos => (
-                    <Menu.Item key={pos} onPress={() => { onChange(pos); setPositionMenuVisible(false); }} title={pos} />
-                  ))}
-                </Menu>
-              </View>
-            </List.Section>
-          )}
-        />
-        {/* Emoji Picker */}
-        <Controller
-          control={control}
-          name="emoji"
-          render={({ field: { onChange, value } }) => (
-            <List.Section>
-              <List.Subheader>Emoji</List.Subheader>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {EMOJI_LIST.map(emoji => (
-                  <TouchableOpacity
-                    key={emoji}
-                    style={{
-                      padding: 8,
-                      margin: 4,
-                      borderRadius: 8,
-                      backgroundColor: value === emoji ? colors.primary : 'transparent',
-                    }}
-                    onPress={() => onChange(emoji)}
+                  <Menu
+                    visible={skillMenuVisible}
+                    onDismiss={() => setSkillMenuVisible(false)}
+                    anchor={
+                      <Button
+                        mode="outlined"
+                        onPress={() => setSkillMenuVisible(true)}
+                        style={[{ width: '100%' }, sharedStyles.cardBorderRadius]}
+                        textColor={colors.secondary}
+                      >
+                        {value}
+                      </Button>
+                    }
+                    contentStyle={{ width: skillMenuWidth }}
                   >
-                    <Text style={{ fontSize: 24 }}>{emoji}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </List.Section>
-          )}
-        />
-        <Button mode="contained" style={{ marginTop: 12 }} onPress={handleSubmit(onSubmit)}>
-          {submitLabel}
-        </Button>
-        <Button onPress={onCancel} style={{ marginTop: 8 }}>
-          Cancel
-        </Button>
+                    {skillLevels.map(level => (
+                      <Menu.Item key={level} onPress={() => { onChange(level); setSkillMenuVisible(false); }} title={level} />
+                    ))}
+                  </Menu>
+                </View>
+              </List.Section>
+            )}
+          />
+          {/* Team Size Dropdown */}
+          <Controller
+            control={control}
+            name="teamSizePreference"
+            render={({ field: { onChange, value } }) => (
+              <List.Section>
+                <List.Subheader>Team Size Preference</List.Subheader>
+                <View
+                  style={styles.input}
+                  onLayout={e => setSizeMenuWidth(e.nativeEvent.layout.width)}
+                >
+                  <Menu
+                    visible={sizeMenuVisible}
+                    onDismiss={() => setSizeMenuVisible(false)}
+                    anchor={
+                      <Button
+                        mode="outlined"
+                        onPress={() => setSizeMenuVisible(true)}
+                        style={[{ width: '100%' }, sharedStyles.cardBorderRadius]}
+                        textColor={colors.secondary}
+                      >
+                        {value || 'Any'}
+                      </Button>
+                    }
+                    contentStyle={{ width: sizeMenuWidth }}
+                  >
+                    {teamSizes.map(size => (
+                      <Menu.Item key={size} onPress={() => { onChange(size); setSizeMenuVisible(false); }} title={size} />
+                    ))}
+                  </Menu>
+                </View>
+              </List.Section>
+            )}
+          />
+          {/* Emoji Picker */}
+          <Controller
+            control={control}
+            name="emoji"
+            render={({ field: { onChange, value } }) => (
+              <List.Section>
+                <List.Subheader>Emoji</List.Subheader>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {EMOJI_LIST.map(emoji => (
+                    <TouchableOpacity
+                      key={emoji}
+                      style={{
+                        padding: 8,
+                        margin: 4,
+                        ...sharedStyles.cardBorderRadius,
+                        backgroundColor: value === emoji ? colors.primary : 'transparent',
+                      }}
+                      onPress={() => onChange(emoji)}
+                    >
+                      <Text style={{ fontSize: 24 }}>{emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </List.Section>
+            )}
+          />
+          {/* Teammate Preference Dropdown */}
+          <Controller
+            control={control}
+            name="teammatePreference"
+            render={({ field: { onChange, value } }) => (
+              <List.Section>
+                <List.Subheader>Teammate Preference</List.Subheader>
+                <View
+                  style={styles.input}
+                  onLayout={e => setTeammateMenuWidth(e.nativeEvent.layout.width)}
+                >
+                  <Menu
+                    visible={teammateMenuVisible}
+                    onDismiss={() => setTeammateMenuVisible(false)}
+                    anchor={
+                      <Button
+                        mode="outlined"
+                        onPress={() => setTeammateMenuVisible(true)}
+                        style={[{ width: '100%' }, sharedStyles.cardBorderRadius]}
+                        textColor={colors.secondary}
+                      >
+                        {value
+                          ? (() => {
+                              const teammate = players.find(p => p.id === value);
+                              return teammate ? `${teammate.emoji || ''} ${teammate.firstName} ${teammate.lastName}` : 'None';
+                            })()
+                          : 'None'}
+                      </Button>
+                    }
+                    contentStyle={{ width: teammateMenuWidth }}
+                  >
+                    <Menu.Item onPress={() => { onChange(''); setTeammateMenuVisible(false); }} title="None" />
+                    {players
+                      .filter(p => !currentId || p.id !== currentId)
+                      .map(p => (
+                        <Menu.Item
+                          key={p.id}
+                          onPress={() => { onChange(p.id); setTeammateMenuVisible(false); }}
+                          title={`${p.emoji || ''} ${p.firstName} ${p.lastName}`}
+                        />
+                      ))}
+                  </Menu>
+                </View>
+              </List.Section>
+            )}
+          />
+          <Button mode="contained" style={[{ marginTop: 12 }, sharedStyles.cardBorderRadius]} onPress={handleSubmit(onSubmit)} buttonColor={colors.primary} textColor={colors.onPrimary}>
+            {submitLabel}
+          </Button>
+          <Button onPress={onCancel} style={[{ marginTop: 8, borderColor: colors.error }, sharedStyles.cardBorderRadius]} textColor={colors.error}>
+            Cancel
+          </Button>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+    ...sharedStyles.cardBorderRadius,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  closeButton: {
+    padding: 0,
+  },
   input: { marginBottom: 12 },
 }); 

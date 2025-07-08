@@ -1,0 +1,44 @@
+import { StyleSheet } from 'react-native';
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  sessionCard: { marginBottom: 16 },
+  addButton: { marginRight: 8, borderRadius: 8 },
+  modal: { padding: 20, margin: 20 },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  closeButton: {
+    padding: 0,
+  },
+  teamsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  controlsContainer: { flexDirection: 'column', alignItems: 'stretch', marginVertical: 0 },
+  controlButton: { marginVertical: 4, marginBottom: 8, borderRadius: 8 },
+  swipeAction: { justifyContent: 'center', alignItems: 'center', backgroundColor: 'red', width: 64 },
+  input: { marginBottom: 12 },
+  teamCard: { marginVertical: 8 },
+  teamNameInput: { fontSize: 18, fontWeight: 'bold', backgroundColor: 'transparent' },
+  skillBadge: { backgroundColor: '#eee', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, fontSize: 12, marginRight: 8 },
+  swipeActionRow: { flexDirection: 'row', alignItems: 'center', height: '100%', backgroundColor: 'red' },
+  formContainer: { marginBottom: 16 },
+  buttonContainer: { marginBottom: 12 },
+  label: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  manualTeamCard: { marginBottom: 12 },
+  manualPlayerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
+  unassignedContainer: { marginBottom: 16 },
+  teamHeaders: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e0e0e0' },
+  teamHeaderText: { fontSize: 14, fontWeight: 'bold', textAlign: 'center', minWidth: 40 },
+  generationContainer: { marginBottom: 16 },
+  generationRow: { flexDirection: 'row', alignItems: 'center' },
+  generateButton: { flex: 1, marginRight: 8, borderRadius: 8 },
+  dropdownButton: { marginLeft: 0, borderRadius: 8 },
+  dropdownMenu: { marginTop: 8, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84 },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  screenTitle: { fontWeight: 'bold' },
+  settingsButton: { marginLeft: 8 },
+});
+
+export default styles; 

@@ -4,32 +4,40 @@ import { PaperProvider, MD3DarkTheme, MD3LightTheme } from 'react-native-paper';
 import MainNavigator from './src/navigation/MainNavigator';
 import { AppStateProvider, useAppState } from './src/models/AppStateContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { CustomThemeColors } from './src/styles/Colors';
 
 function ThemedApp() {
   const { settings } = useAppState();
-  const paperTheme = settings.darkMode ? MD3DarkTheme : MD3LightTheme;
+  const paperTheme = settings.darkMode ? {
+    ...MD3DarkTheme,
+    colors: CustomThemeColors.dark
+  } : {
+    ...MD3LightTheme,
+    colors: CustomThemeColors.light
+  };
+
   const navTheme = settings.darkMode ? {
     ...DarkTheme,
     colors: {
       ...DarkTheme.colors,
-      background: paperTheme.colors.background,
-      primary: paperTheme.colors.primary,
-      card: paperTheme.colors.surface,
-      text: paperTheme.colors.onSurface,
-      border: paperTheme.colors.outline,
-      notification: paperTheme.colors.error,
-    },
+      background: CustomThemeColors.dark.background,
+      primary: CustomThemeColors.dark.primary,
+      card: CustomThemeColors.dark.surface,
+      text: CustomThemeColors.dark.onSurface,
+      border: CustomThemeColors.dark.outline,
+      notification: CustomThemeColors.dark.error,
+    }
   } : {
     ...DefaultTheme,
     colors: {
       ...DefaultTheme.colors,
-      background: paperTheme.colors.background,
-      primary: paperTheme.colors.primary,
-      card: paperTheme.colors.surface,
-      text: paperTheme.colors.onSurface,
-      border: paperTheme.colors.outline,
-      notification: paperTheme.colors.error,
-    },
+      background: CustomThemeColors.light.background,
+      primary: CustomThemeColors.light.primary,
+      card: CustomThemeColors.light.surface,
+      text: CustomThemeColors.light.onSurface,
+      border: CustomThemeColors.light.outline,
+      notification: CustomThemeColors.light.error,
+    }
   };
   return (
     <PaperProvider theme={paperTheme}>

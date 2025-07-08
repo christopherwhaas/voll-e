@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Player, Team, Settings, AppState, STORAGE_KEYS } from './types';
+import { SORT_OPTIONS } from '../utils/constants';
 
 interface AppStateContextProps extends AppState {
   setPlayers: (players: Player[]) => void;
@@ -12,18 +13,8 @@ interface AppStateContextProps extends AppState {
 }
 
 const defaultSettings: Settings = {
-  skillWeight: 0.6,
-  sizeWeight: 0.3,
-  positionWeight: 0.1,
+  sortingPreferences: SORT_OPTIONS.map(o => o.key),
   darkMode: false,
-};
-
-const defaultState: AppState = {
-  players: [],
-  teams: [],
-  settings: defaultSettings,
-  numberOfNets: 1,
-  sessionPlayerIds: [],
 };
 
 const AppStateContext = createContext<AppStateContextProps | undefined>(undefined);

@@ -10,7 +10,7 @@ export interface Player {
   lastName: string;
   skillLevel: SkillLevel;
   teamSizePreference?: TeamSize; // Default is 'Any'
-  preferredPosition?: Position; // Default is 'Any'
+  teammatePreference?: string; // Player id of preferred teammate
   emoji?: string; // Default is random from EMOJI_LIST
 }
 
@@ -21,9 +21,7 @@ export interface Team {
 }
 
 export interface Settings {
-  skillWeight: number;      // Default: 0.6
-  sizeWeight: number;       // Default: 0.3
-  positionWeight: number;   // Default: 0.1
+  sortingPreferences: string[]; // e.g. ['skill', 'size', 'teammate']
   darkMode?: boolean;       // Default: false
 }
 

@@ -5,6 +5,7 @@ import DraggableFlatList from 'react-native-draggable-flatlist';
 import { Team, Player, COLOR_MAP } from '../models/types';
 import PlayerListItem from './PlayerListItem';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
+import { sharedStyles } from '../styles/shared';
 
 interface TeamCardProps {
   team: Team;
@@ -26,7 +27,7 @@ export default function TeamCard({
   const { colors } = useTheme();
   const swipeableRefs = React.useRef<{ [key: string]: any }>({});
   return (
-    <Card key={team.id} style={[styles.teamCard, { backgroundColor: colors.background }]}>
+    <Card key={team.id} style={[styles.teamCard, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
       <Card.Title
         title={
           <RNTextInput
@@ -43,7 +44,7 @@ export default function TeamCard({
           </View>
         )}
       />
-      <Card.Content style={{ backgroundColor: colors.background }}>
+      <Card.Content style={[{ backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
         {team.players.length === 0 ? (
           <Text style={{ color: colors.onSurface, opacity: 0.6 }}>No players assigned.</Text>
         ) : (
@@ -54,7 +55,7 @@ export default function TeamCard({
               <Swipeable
                 ref={ref => { swipeableRefs.current[item.id] = ref; }}
                 renderRightActions={() => (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', height: '100%' }}>
+                  <View style={styles.swipeActions}>
                     <IconButton icon="swap-horizontal" iconColor={colors.primary} onPress={() => onMovePlayer(item, team.id)} />
                     <IconButton icon="delete" iconColor={colors.error} onPress={() => onRemovePlayer(team.id, item.id)} />
                   </View>
@@ -81,5 +82,6 @@ export default function TeamCard({
 const styles = StyleSheet.create({
   teamCard: { marginVertical: 8 },
   teamNameInput: { fontSize: 18, fontWeight: 'bold', backgroundColor: 'transparent' },
-  skillBadge: { backgroundColor: '#eee', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2, fontSize: 12, marginRight: 8 },
+  skillBadge: { ...sharedStyles.cardBorderRadius, paddingHorizontal: 8, paddingVertical: 2, fontSize: 12, marginRight: 8 },
+  swipeActions: { flexDirection: 'row', alignItems: 'center', height: '100%' },
 }); 

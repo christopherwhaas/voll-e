@@ -3,7 +3,7 @@ import { View, ScrollView, Dimensions } from 'react-native';
 import { Text, List, FAB, Portal, Modal, IconButton, useTheme, Card } from 'react-native-paper';
 import { useAppState } from '../models/AppStateContext';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import PlayerForm, { PlayerFormValues } from '../PlayerForm';
+import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlayerListItem from '../components/PlayerListItem';
 import styles from '../styles/PlayersScreenStyles';

@@ -6,7 +6,7 @@ import { Player, COLOR_NAMES, SKILL_VALUES, Team } from '../models/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SCREEN_MARGIN, SORT_OPTIONS } from '../utils/constants';
 import { sharedStyles, screenHeight } from '../styles/shared';
-import PlayerForm, { PlayerFormValues } from '../PlayerForm';
+import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import TeamCard from '../components/TeamCard';
 import SessionPlayersCard from '../components/SessionPlayersCard';
 import SettingsModal from '../components/SettingsModal';

@@ -4,12 +4,29 @@ import { Text, Button, TextInput, List, useTheme, Menu, IconButton } from 'react
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { SkillLevel, TeamSize, EMOJI_LIST } from './models/types';
-import { useAppState } from './models/AppStateContext';
-import { sharedStyles, screenHeight } from './styles/shared';
+import { SkillLevel, TeamSize, EMOJI_LIST } from '../models/types';
+import { useAppState } from '../models/AppStateContext';
+import { sharedStyles, screenHeight } from '../styles/shared';
+import TabSelector from './TabSelector';
 
 const skillLevels: SkillLevel[] = ['New', 'Beginner', 'Intermediate', 'Advanced', 'Jules'];
 const teamSizes: TeamSize[] = ['Any', 'Small', 'Large'];
+
+// Emoji mapping for skill levels
+const skillLevelEmojis: Record<SkillLevel, string> = {
+  'New': '👶',
+  'Beginner': '🌱',
+  'Intermediate': '👌',
+  'Advanced': '🔥',
+  'Jules': '👑'
+};
+
+// Tab options for skill level and team size
+const skillLevelOptions = skillLevels.map(level => ({ 
+  key: level, 
+  label: skillLevelEmojis[level] 
+}));
+const teamSizeOptions = teamSizes.map(size => ({ key: size, label: size }));
 
 const schema = yup.object({
   firstName: yup.string().required('First name is required'),
@@ -64,11 +81,7 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
     }
   }, [initialValues]);
 
-  // Dropdown menu state and width for each dropdown
-  const [skillMenuVisible, setSkillMenuVisible] = React.useState(false);
-  const [skillMenuWidth, setSkillMenuWidth] = React.useState(0);
-  const [sizeMenuVisible, setSizeMenuVisible] = React.useState(false);
-  const [sizeMenuWidth, setSizeMenuWidth] = React.useState(0);
+  // Dropdown menu state and width for teammate preference
   const [teammateMenuVisible, setTeammateMenuVisible] = React.useState(false);
   const [teammateMenuWidth, setTeammateMenuWidth] = React.useState(0);
 
@@ -114,71 +127,35 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
               />
             )}
           />
-          {/* Skill Level Dropdown */}
+          {/* Skill Level Tab Selector */}
           <Controller
             control={control}
             name="skillLevel"
             render={({ field: { onChange, value } }) => (
               <List.Section>
                 <List.Subheader>Skill Level</List.Subheader>
-                <View
-                  style={styles.input}
-                  onLayout={e => setSkillMenuWidth(e.nativeEvent.layout.width)}
-                >
-                  <Menu
-                    visible={skillMenuVisible}
-                    onDismiss={() => setSkillMenuVisible(false)}
-                    anchor={
-                      <Button
-                        mode="outlined"
-                        onPress={() => setSkillMenuVisible(true)}
-                        style={[{ width: '100%' }, sharedStyles.cardBorderRadius]}
-                        textColor={colors.secondary}
-                      >
-                        {value}
-                      </Button>
-                    }
-                    contentStyle={{ width: skillMenuWidth }}
-                  >
-                    {skillLevels.map(level => (
-                      <Menu.Item key={level} onPress={() => { onChange(level); setSkillMenuVisible(false); }} title={level} />
-                    ))}
-                  </Menu>
-                </View>
+                <TabSelector
+                  options={skillLevelOptions}
+                  selectedKey={value}
+                  onSelect={onChange}
+                  style={styles.tabSelector}
+                />
               </List.Section>
             )}
           />
-          {/* Team Size Dropdown */}
+          {/* Team Size Preference Tab Selector */}
           <Controller
             control={control}
             name="teamSizePreference"
             render={({ field: { onChange, value } }) => (
               <List.Section>
                 <List.Subheader>Team Size Preference</List.Subheader>
-                <View
-                  style={styles.input}
-                  onLayout={e => setSizeMenuWidth(e.nativeEvent.layout.width)}
-                >
-                  <Menu
-                    visible={sizeMenuVisible}
-                    onDismiss={() => setSizeMenuVisible(false)}
-                    anchor={
-                      <Button
-                        mode="outlined"
-                        onPress={() => setSizeMenuVisible(true)}
-                        style={[{ width: '100%' }, sharedStyles.cardBorderRadius]}
-                        textColor={colors.secondary}
-                      >
-                        {value || 'Any'}
-                      </Button>
-                    }
-                    contentStyle={{ width: sizeMenuWidth }}
-                  >
-                    {teamSizes.map(size => (
-                      <Menu.Item key={size} onPress={() => { onChange(size); setSizeMenuVisible(false); }} title={size} />
-                    ))}
-                  </Menu>
-                </View>
+                <TabSelector
+                  options={teamSizeOptions}
+                  selectedKey={value}
+                  onSelect={onChange}
+                  style={styles.tabSelector}
+                />
               </List.Section>
             )}
           />
@@ -281,4 +258,5 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   input: { marginBottom: 12 },
+  tabSelector: { marginBottom: 12 },
 }); 

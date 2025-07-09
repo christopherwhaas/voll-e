@@ -14,7 +14,7 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 0,
   },
-  teamsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  teamsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 60 },
   controlsContainer: { flexDirection: 'column', alignItems: 'stretch', marginVertical: 0 },
   controlButton: { marginVertical: 4, marginBottom: 8, borderRadius: 8 },
   swipeAction: { justifyContent: 'center', alignItems: 'center', backgroundColor: 'red', width: 64 },
@@ -39,6 +39,7 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   screenTitle: { fontWeight: 'bold' },
   settingsButton: { marginLeft: 8 },
+  tabSelector: { marginBottom: 12 },
 });
 
 export default styles; 

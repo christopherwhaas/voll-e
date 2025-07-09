@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Player, Team, Settings, AppState, STORAGE_KEYS } from './types';
+import { Player, Team, Settings, AppState, Tournament, STORAGE_KEYS } from './types';
 import { SORT_OPTIONS } from '../utils/constants';
 
 interface AppStateContextProps extends AppState {
@@ -9,6 +9,8 @@ interface AppStateContextProps extends AppState {
   setSettings: (settings: Settings) => void;
   setNumberOfNets: (nets: number) => void;
   setSessionPlayerIds: (ids: string[]) => void;
+  tournaments: Tournament[];
+  setTournaments: (tournaments: Tournament[]) => void;
   loadAppState: () => Promise<void>;
 }
 
@@ -25,6 +27,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [numberOfNets, setNumberOfNets] = useState<number>(1);
   const [sessionPlayerIds, setSessionPlayerIds] = useState<string[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load from AsyncStorage on mount
@@ -32,6 +35,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     try {
       const playersJson = await AsyncStorage.getItem(STORAGE_KEYS.PLAYERS);
       const settingsJson = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
+      const tournamentsJson = await AsyncStorage.getItem(STORAGE_KEYS.TOURNAMENTS);
       console.log('Loading from AsyncStorage - settingsJson:', settingsJson);
       if (playersJson) setPlayers(JSON.parse(playersJson));
       if (settingsJson) {
@@ -41,6 +45,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       } else {
         console.log('No settings found, using defaults');
         setSettings(defaultSettings);
+      }
+      if (tournamentsJson) {
+        setTournaments(JSON.parse(tournamentsJson));
       }
     } catch (e) {
       console.error('Error loading app state:', e);
@@ -57,7 +64,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     initializeApp();
   }, []);
 
-  // Persist players/settings
+  // Persist players/settings/tournaments
   useEffect(() => {
     AsyncStorage.setItem(STORAGE_KEYS.PLAYERS, JSON.stringify(players));
   }, [players]);
@@ -68,6 +75,10 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       AsyncStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     }
   }, [settings, isLoading]);
+
+  useEffect(() => {
+    AsyncStorage.setItem(STORAGE_KEYS.TOURNAMENTS, JSON.stringify(tournaments));
+  }, [tournaments]);
 
   if (isLoading) {
     return null; // or a loading spinner
@@ -81,11 +92,13 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         settings: settings || defaultSettings,
         numberOfNets,
         sessionPlayerIds,
+        tournaments,
         setPlayers,
         setTeams,
         setSettings,
         setNumberOfNets,
         setSessionPlayerIds,
+        setTournaments,
         loadAppState,
       }}
     >

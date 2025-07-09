@@ -10,6 +10,7 @@ import PlayerForm, { PlayerFormValues } from '../PlayerForm';
 import TeamCard from '../components/TeamCard';
 import SessionPlayersCard from '../components/SessionPlayersCard';
 import SettingsModal from '../components/SettingsModal';
+import TabSelector from '../components/TabSelector';
 import { generateRandomTeams, generateBestTeamSet } from '../utils/teamGeneration';
 import styles from '../styles/TeamsScreenStyles';
 
@@ -40,7 +41,6 @@ export default function TeamsScreen() {
   const [manualTeams, setManualTeams] = React.useState<Team[]>([]);
   const [unassignedPlayers, setUnassignedPlayers] = React.useState<Player[]>([]);
   const [generationMode, setGenerationMode] = React.useState<'random' | 'balanced' | 'manual'>('balanced');
-  const [showGenerationDropdown, setShowGenerationDropdown] = React.useState(false);
   const [settingsModalVisible, setSettingsModalVisible] = React.useState(false);
   // Modal mode: 'select' or 'add'
   const [modalMode, setModalMode] = React.useState<'select' | 'add'>('select');
@@ -52,6 +52,13 @@ export default function TeamsScreen() {
   const sessionPlayers = players.filter(p => sessionPlayerIds.includes(p.id));
   // Players not in session
   const availablePlayers = players.filter(p => !sessionPlayerIds.includes(p.id));
+
+  // Team generation options for TabSelector
+  const generationOptions = [
+    { key: 'random', label: 'Random' },
+    { key: 'balanced', label: 'Balanced' },
+    { key: 'manual', label: 'Manual' }
+  ];
 
   // Random Team Generation
   const handleRandomTeams = () => {
@@ -258,6 +265,26 @@ export default function TeamsScreen() {
         />
       </View>
       
+      {/* Team Generation Controls */}
+      <View style={styles.generationContainer}>
+        <TabSelector
+          options={generationOptions}
+          selectedKey={generationMode}
+          onSelect={(key) => setGenerationMode(key as 'random' | 'balanced' | 'manual')}
+          style={styles.tabSelector}
+        />
+        <Button 
+          mode="contained" 
+          disabled={sessionPlayers.length === 0} 
+          style={styles.generateButton} 
+          onPress={handleGenerateTeams}
+          buttonColor={colors.primary}
+          textColor={colors.onPrimary}
+        >
+          Generate Teams ({getGenerationModeLabel()})
+        </Button>
+      </View>
+      
       <SessionPlayersCard
         sessionPlayers={sessionPlayers}
         numberOfNets={numberOfNets}
@@ -268,50 +295,6 @@ export default function TeamsScreen() {
         onRemovePlayer={handleRemoveFromSession}
         swipeableRefs={swipeableRefs}
       />
-      
-      {/* Team Generation Controls */}
-      <View style={styles.generationContainer}>
-        <View style={styles.generationRow}>
-          <Button 
-            mode="contained" 
-            disabled={sessionPlayers.length === 0} 
-            style={styles.generateButton} 
-            onPress={handleGenerateTeams}
-            buttonColor={colors.primary}
-            textColor={colors.onPrimary}
-          >
-            Generate Teams ({getGenerationModeLabel()})
-          </Button>
-          <IconButton
-            icon={showGenerationDropdown ? "chevron-up" : "chevron-down"}
-            onPress={() => setShowGenerationDropdown(!showGenerationDropdown)}
-            style={styles.dropdownButton}
-          />
-        </View>
-        
-                  {showGenerationDropdown && (
-            <View style={[styles.dropdownMenu, { backgroundColor: colors.surface }, sharedStyles.cardBorderRadius]}>
-            <List.Item
-              title="Random"
-              onPress={() => { setGenerationMode('random'); setShowGenerationDropdown(false); }}
-              left={props => <List.Icon {...props} icon="shuffle" />}
-              style={generationMode === 'random' ? { backgroundColor: colors.primaryContainer } : {}}
-            />
-            <List.Item
-              title="Balanced"
-              onPress={() => { setGenerationMode('balanced'); setShowGenerationDropdown(false); }}
-              left={props => <List.Icon {...props} icon="scale-balance" />}
-              style={generationMode === 'balanced' ? { backgroundColor: colors.primaryContainer } : {}}
-            />
-            <List.Item
-              title="Manual"
-              onPress={() => { setGenerationMode('manual'); setShowGenerationDropdown(false); }}
-              left={props => <List.Icon {...props} icon="account-edit" />}
-              style={generationMode === 'manual' ? { backgroundColor: colors.primaryContainer } : {}}
-            />
-          </View>
-        )}
-      </View>
     </>
   );
 

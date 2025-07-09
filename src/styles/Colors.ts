@@ -46,6 +46,8 @@ export const CustomThemeColors = {
     teal: "#319795",
     orange: "#DD6B20",
     gray: "#CBD5E0",
+    gold: "#FFD700",
+    silver: "#C0C0C0",
     // Data Visuals
     primaryLine: "#2B6CB0",
     secondaryLine: "#E46C2C",
@@ -111,6 +113,8 @@ export const CustomThemeColors = {
     teal: "#4FD1C5",
     orange: "#F6AD55",
     gray: "#A0AEC0",
+    gold: "#FFD700",
+    silver: "#C0C0C0",
     // Data Visuals
     primaryLine: "#00C896",
     secondaryLine: "#FF763F",

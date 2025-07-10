@@ -1,4 +1,4 @@
-import { Player, Team, SKILL_VALUES } from '../models/types';
+import { Player, Team, SKILL_VALUES, WeightSetings } from '../models/types';
 import { SORT_OPTIONS, DEFAULT_RANKING_PREFERENCES } from './constants';
 
 // Helper to get random color names for teams
@@ -208,22 +208,30 @@ export function generateBalancedTeams(players: Player[], sessionPlayerIds: strin
   return teamsArr;
 }
 
-function getPlayerVector(player: Player, avgSize: number, preferenceOrder: string[], players: Player[]): number[] {
-  return preferenceOrder.map(pref => {
-    if (pref === 'skill') {
-      // Normalize skill to [0,1]
-      return SKILL_VALUES[player.skillLevel] / 4;
-    } else if (pref === 'teammate') {
-      if (!player.teammatePreference) return 0;
-      // 1 if preferred teammate is in the same team, 0 otherwise (for assignment, just 0)
-      return 0;
-    } else if (pref === 'size') {
-      if (!player.teamSizePreference || player.teamSizePreference === 'Any') return 0.5;
-      const prefSize = player.teamSizePreference === 'Small' ? Math.max(2, Math.floor(avgSize)) : Math.ceil(avgSize);
-      return prefSize / (2 * avgSize); // normalized
+function getPlayerVector(player: Player, avgSize: number, players: Player[], weights: WeightSetings): number[] {
+  let playerVector : number[] = [];
+  // Normalize skill to [0,1]
+  playerVector.push((SKILL_VALUES[player.skillLevel] / 4) * weights.skillLevel);
+  if (!player.teammatePreference) {
+    // Treat as if teammate preference was matched
+    playerVector.push(1 * weights.teammatePreference);
+  } else {
+    if (!players.find(p => p.id === player.teammatePreference)){
+      // No match so mark as a miss
+      playerVector.push(0);
+    } else {
+      // matched so mark as fulfilled
+      playerVector.push(1 * weights.teammatePreference);
     }
-    return 0;
-  });
+  }
+  if (!player.teamSizePreference || player.teamSizePreference === 'Any') {
+    // Treat as preference matched
+    playerVector.push(1 * weights.teamSizePreference);
+  } else {
+    const prefSize = player.teamSizePreference === 'Small' ? Math.max(2, Math.floor(avgSize)) : Math.ceil(avgSize);
+    playerVector.push((prefSize / (2 * avgSize)) * weights.teamSizePreference); // normalized
+  }
+  return playerVector;
 }
 
 function randomVector(dim: number): number[] {
@@ -242,21 +250,21 @@ function euclideanSquared(a: number[], b: number[]): number {
   return a.reduce((sum, ai, i) => sum + (ai - b[i]) ** 2, 0);
 }
 
-export function createBalancedTeams(players: Player[], config: { numberOfNets: number, preferenceOrder: string[] }, COLOR_NAMES: string[]): Team[] {
+export function createBalancedTeams(players: Player[], config: { numberOfNets: number, weights: WeightSetings }, COLOR_NAMES: string[]): Team[] {
   const teamCount = 2 * config.numberOfNets;
   const teamSize = players.length / teamCount;
   const minTeamSize = Math.floor(teamSize);
   const maxTeamSize = Math.ceil(teamSize);
   const avgSize = teamSize;
-  const preferenceOrder = config.preferenceOrder;
+  const weights = config.weights;
   // Get random color names
   const colorNames = getRandomColorNames(teamCount, COLOR_NAMES);
   // Step 1: Shuffle players
   const shuffled = [...players].sort(() => Math.random() - 0.5);
   // Step 2: Player vectors
-  const playerVectors = shuffled.map(p => getPlayerVector(p, avgSize, preferenceOrder, players));
+  const playerVectors = shuffled.map(p => getPlayerVector(p, avgSize, players, weights));
   // Step 3: Random team centers
-  let teamCenters = Array.from({ length: teamCount }, () => randomVector(preferenceOrder.length));
+  let teamCenters = Array.from({ length: teamCount }, () => randomVector(3));
   // Step 4: Greedy assignment
   const teams: Team[] = Array.from({ length: teamCount }, (_, i) => ({
     id: (i + 1).toString(),
@@ -284,7 +292,7 @@ export function createBalancedTeams(players: Player[], config: { numberOfNets: n
     const chosenIdx = bestTeams[Math.floor(Math.random() * bestTeams.length)];
     teams[chosenIdx].players.push(p);
     // Update team center
-    const vectors = teams[chosenIdx].players.map(pl => getPlayerVector(pl, avgSize, preferenceOrder, players));
+    const vectors = teams[chosenIdx].players.map(pl => getPlayerVector(pl, avgSize, players, weights));
     teamCenters[chosenIdx] = meanVector(vectors);
   }
   // Step 5: Final team size balancing (ensure max-min <= 1)
@@ -306,7 +314,7 @@ export function createBalancedTeams(players: Player[], config: { numberOfNets: n
 }
 
 // Optional: multi-run optimization
-export function generateBestTeamSet(players: Player[], config: { numberOfNets: number, preferenceOrder: string[] }, COLOR_NAMES: string[], runs = 5): Team[] {
+export function generateBestTeamSet(players: Player[], config: { numberOfNets: number, weights: WeightSetings }, COLOR_NAMES: string[], runs = 5): Team[] {
   let bestTeams: Team[] = [];
   let bestScore = Infinity;
   for (let i = 0; i < runs; i++) {

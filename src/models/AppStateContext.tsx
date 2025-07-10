@@ -15,7 +15,11 @@ interface AppStateContextProps extends AppState {
 }
 
 const defaultSettings: Settings = {
-  sortingPreferences: SORT_OPTIONS.map(o => o.key),
+  weights: {
+    skillLevel: 3,
+    teammatePreference: 2,
+    teamSizePreference: 1
+  },
   darkMode: false,
 };
 

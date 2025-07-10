@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { View, StyleSheet, Keyboard, Pressable, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Keyboard, Pressable, TouchableOpacity, ScrollView } from 'react-native';
 import { Text, Button, Portal, Modal, List, Switch, useTheme, IconButton } from 'react-native-paper';
-import DraggableFlatList from 'react-native-draggable-flatlist';
+import Slider from '@react-native-community/slider';
 import { SORT_OPTIONS } from '../utils/constants';
 import { sharedStyles, screenHeight } from '../styles/shared';
 import TabSelector from './TabSelector';
@@ -10,55 +10,46 @@ interface SettingsModalProps {
   visible: boolean;
   onDismiss: () => void;
   settings: {
-    sortingPreferences: string[];
+    weights: {
+      skillLevel: number;
+      teammatePreference: number;
+      teamSizePreference: number;
+    };
     darkMode: boolean;
   };
-  onSave: (settings: { sortingPreferences: string[]; darkMode: boolean }) => void;
+  onSave: (settings: { weights: { skillLevel: number; teammatePreference: number; teamSizePreference: number }; darkMode: boolean }) => void;
 }
 
 export default function SettingsModal({ visible, onDismiss, settings, onSave }: SettingsModalProps) {
   const { colors } = useTheme();
-  const [sortingPreferences, setSortingPreferences] = React.useState<string[]>(settings.sortingPreferences);
-  const [darkMode, setDarkMode] = React.useState(settings.darkMode);
+  const [darkMode, setDarkMode] = React.useState(settings.darkMode ?? false);
   const [settingsSavedModalVisible, setSettingsSavedModalVisible] = React.useState(false);
+  const [weights, setWeights] = React.useState(settings.weights ?? {
+    skillLevel: 3,
+    teammatePreference: 2,
+    teamSizePreference: 1
+  });
 
   // Initialize local state when modal opens
   React.useEffect(() => {
     if (visible) {
-      setSortingPreferences(settings.sortingPreferences);
-      setDarkMode(settings.darkMode);
+      setWeights(settings.weights ?? {
+        skillLevel: 3,
+        teammatePreference: 2,
+        teamSizePreference: 1
+      });
+      setDarkMode(settings.darkMode ?? false);
     }
   }, [visible]);
 
   const handleSaveSettings = () => {
-    const newSettings = { sortingPreferences, darkMode };
+    const newSettings = { weights, darkMode };
     onSave(newSettings);
     setSettingsSavedModalVisible(true);
     setTimeout(() => setSettingsSavedModalVisible(false), 700);
   };
 
-  const handleDarkModeToggle = (value: boolean) => {
-    setDarkMode(value);
-  };
 
-  const renderSettingsItem = ({ item, drag, isActive }: { item: string; drag: () => void; isActive: boolean }) => {
-    const option = SORT_OPTIONS.find(o => o.key === item);
-    return (
-      <Pressable
-        onLongPress={drag}
-        style={{
-          padding: 16,
-          backgroundColor: isActive ? colors.primary + '22' : colors.surface,
-          ...sharedStyles.cardBorderRadius,
-          marginBottom: 8,
-          flexDirection: 'row',
-          alignItems: 'center',
-        }}
-      >
-        <Text style={{ fontSize: 16 }}>{option?.label}</Text>
-      </Pressable>
-    );
-  };
 
   return (
     <Portal>
@@ -72,6 +63,11 @@ export default function SettingsModal({ visible, onDismiss, settings, onSave }: 
             style={sharedStyles.closeButton}
           />
         </View>
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          style={{ maxHeight: screenHeight * 0.8 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        >
         <List.Section>
           <List.Subheader>App Appearance</List.Subheader>
           <View style={sharedStyles.settingRow}>
@@ -90,31 +86,62 @@ export default function SettingsModal({ visible, onDismiss, settings, onSave }: 
         <List.Section>
           <List.Subheader>Team Generation Preferences</List.Subheader>
           <Text variant="bodySmall" style={{ marginBottom: 16, opacity: 0.7 }}>
-            Drag to reorder how players are prioritized when generating balanced teams:
+            Adjust the importance of each factor when generating balanced teams:
           </Text>
-          <View style={{ height: 200 }}>
-            <DraggableFlatList
-              data={sortingPreferences}
-              keyExtractor={(item) => item}
-              onDragEnd={({ data }) => setSortingPreferences(data)}
-              renderItem={({ item, drag, isActive }) => (
-                <TouchableOpacity
-                  onLongPress={drag}
-                  style={{
-                    padding: 16,
-                    backgroundColor: isActive ? colors.primary + '22' : colors.surface,
-                    ...sharedStyles.cardBorderRadius,
-                    marginBottom: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ flex: 1, color: colors.onSurface }}>{item}</Text>
-                  <IconButton icon="drag" size={20} />
-                </TouchableOpacity>
-              )}
-            />
+          
+          <View style={sharedStyles.settingRow}>
+            <Text variant="bodyMedium" style={sharedStyles.settingLabel}>Skill Level</Text>
+            <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: 'bold', marginLeft: 8 }}>
+              {weights.skillLevel}
+            </Text>
           </View>
+          <Slider
+            style={{ height: 40, marginBottom: 16 }}
+            minimumValue={0}
+            maximumValue={5}
+            step={1}
+            value={weights.skillLevel}
+            onValueChange={(value) => setWeights({ ...weights, skillLevel: Math.round(value) })}
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={colors.surfaceVariant}
+            thumbTintColor={colors.primary}
+          />
+
+          <View style={sharedStyles.settingRow}>
+            <Text variant="bodyMedium" style={sharedStyles.settingLabel}>Teammate Preference</Text>
+            <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: 'bold', marginLeft: 8 }}>
+              {weights.teammatePreference}
+            </Text>
+          </View>
+          <Slider
+            style={{ height: 40, marginBottom: 16 }}
+            minimumValue={0}
+            maximumValue={5}
+            step={1}
+            value={weights.teammatePreference}
+            onValueChange={(value) => setWeights({ ...weights, teammatePreference: Math.round(value) })}
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={colors.surfaceVariant}
+            thumbTintColor={colors.primary}
+          />
+
+          <View style={sharedStyles.settingRow}>
+            <Text variant="bodyMedium" style={sharedStyles.settingLabel}>Team Size Preference</Text>
+            <Text variant="bodyMedium" style={{ color: colors.primary, fontWeight: 'bold', marginLeft: 8 }}>
+              {weights.teamSizePreference}
+            </Text>
+          </View>
+          <Slider
+            style={{ height: 40, marginBottom: 16 }}
+            minimumValue={0}
+            maximumValue={5}
+            step={1}
+            value={weights.teamSizePreference}
+            onValueChange={(value) => setWeights({ ...weights, teamSizePreference: Math.round(value) })}
+            minimumTrackTintColor={colors.primary}
+            maximumTrackTintColor={colors.surfaceVariant}
+            thumbTintColor={colors.primary}
+          />
         </List.Section>
         <Button mode="contained" onPress={handleSaveSettings} style={[{ marginTop: 16 }, sharedStyles.cardBorderRadius]} buttonColor={colors.primary} textColor={colors.onPrimary}>
           Save Settings
@@ -122,6 +149,7 @@ export default function SettingsModal({ visible, onDismiss, settings, onSave }: 
         <Button mode="outlined" onPress={onDismiss} style={[{ marginTop: 12, borderColor: colors.error }, sharedStyles.cardBorderRadius]} textColor={colors.error}>
           Cancel
         </Button>
+        </ScrollView>
       </Modal>
 
       <Modal visible={settingsSavedModalVisible} onDismiss={() => setSettingsSavedModalVisible(false)} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>

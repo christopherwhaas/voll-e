@@ -672,8 +672,7 @@ export default StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
     marginTop: 10,
-    marginBottom: 4,
-    // color: '#888', // use theme in component
+    marginBottom: 8,
   },
   standingsTable: {
     borderRadius: 10,
@@ -760,5 +759,88 @@ export default StyleSheet.create({
     fontSize: 13,
     // color: '#fff', // use theme in component
     textAlign: 'center',
+  },
+  // --- Modern Match Styles ---
+  emptyMatchesContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  emptyMatchesText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  modernMatchCard: {
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  modernMatchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  modernMatchBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  modernMatchBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  modernActiveIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  modernMatchContent: {
+    gap: 8,
+  },
+  modernTeamRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modernTeamBadge: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  modernTeamName: {
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+  },
+  modernTeamScore: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    minWidth: 24,
+    textAlign: 'center',
+  },
+  modernVsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginVertical: 2,
+  },
+  modernVsLine: {
+    flex: 1,
+    height: 1,
+  },
+  modernVsText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginHorizontal: 4,
   },
 }); 

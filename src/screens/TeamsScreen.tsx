@@ -68,10 +68,10 @@ export default function TeamsScreen() {
 
   // Balanced Team Generation
   const handleBalancedTeams = () => {
-    const preferenceOrder = settings.sortingPreferences || ['skill', 'teammate', 'size'];
+    const weights = settings.weights ?? {skillLevel: 3, teammatePreference: 2, teamSizePreference: 1};
     const teamsArr = generateBestTeamSet(
       players.filter(p => sessionPlayerIds.includes(p.id)),
-      { numberOfNets, preferenceOrder },
+      { numberOfNets, weights },
       COLOR_NAMES,
       5
     );
@@ -247,7 +247,7 @@ export default function TeamsScreen() {
   };
 
   // Settings handlers
-  const handleSaveSettings = (newSettings: { sortingPreferences: string[]; darkMode: boolean }) => {
+  const handleSaveSettings = (newSettings: { weights: { skillLevel: number; teammatePreference: number; teamSizePreference: number }; darkMode: boolean }) => {
     setSettings(newSettings);
   };
 
@@ -257,12 +257,23 @@ export default function TeamsScreen() {
       {/* Title and Settings Row */}
       <View style={styles.titleRow}>
         <Text variant="headlineMedium" style={styles.screenTitle}>Teams</Text>
-        <IconButton
-          icon="cog"
-          size={24}
-          onPress={() => setSettingsModalVisible(true)}
-          style={styles.settingsButton}
-        />
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {teams.length > 0 && (
+            <IconButton
+              icon="delete-sweep"
+              size={24}
+              onPress={handleClearTeams}
+              iconColor={colors.error}
+              style={styles.settingsButton}
+            />
+          )}
+          <IconButton
+            icon="cog"
+            size={24}
+            onPress={() => setSettingsModalVisible(true)}
+            style={styles.settingsButton}
+          />
+        </View>
       </View>
       
       {/* Team Generation Controls */}
@@ -301,11 +312,7 @@ export default function TeamsScreen() {
   // Footer: team generation controls
   const renderFooter = () => (
     <View style={styles.controlsContainer}>
-      {teams.length > 0 && (
-        <Button mode="outlined" style={[{ marginBottom: 12, borderColor: colors.error }, sharedStyles.cardBorderRadius]} onPress={handleClearTeams} textColor={colors.error} >
-          Clear Teams
-        </Button>
-      )}
+      {/* Footer content can be added here if needed */}
     </View>
   );
 
@@ -521,7 +528,11 @@ export default function TeamsScreen() {
           onDismiss={() => setSettingsModalVisible(false)}
           onSave={handleSaveSettings}
           settings={{
-            sortingPreferences: settings.sortingPreferences ?? [],
+            weights: settings.weights ?? {
+              skillLevel: 3,
+              teammatePreference: 2,
+              teamSizePreference: 1
+            },
             darkMode: settings.darkMode ?? false
           }}
         />

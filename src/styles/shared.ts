@@ -12,7 +12,7 @@ export const sharedStyles = StyleSheet.create({
   modalStyle: {
     margin: 20,
     padding: 15,
-    maxHeight: screenHeight * 0.8, // 80% of screen height
+    maxHeight: screenHeight * 0.85, // 85% of screen height
   },
   
   modalContentStyle: {
@@ -39,7 +39,7 @@ export const sharedStyles = StyleSheet.create({
   
   // ScrollView Styles
   modalScrollView: {
-    maxHeight: screenHeight * 0.6,
+    maxHeight: screenHeight * 0.7,
   },
   
   // Settings Styles

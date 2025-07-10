@@ -52,9 +52,11 @@ interface PlayerFormProps {
   onCancel: () => void;
   title?: string;
   submitLabel?: string;
+  onImport?: () => void;
+  showImportButton?: boolean;
 }
 
-export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player' }: PlayerFormProps) {
+export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player', onImport, showImportButton = false }: PlayerFormProps) {
   const { colors } = useTheme();
   const { players } = useAppState();
   const { control, handleSubmit, reset, setValue, watch } = useForm<PlayerFormValues>({
@@ -99,7 +101,18 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
               ...sharedStyles.modalTitle,
               color: colors.onBackground
             }}>{title}</Text>
-
+            {showImportButton && onImport && (
+              <Button
+                mode="outlined"
+                icon="account-multiple-plus"
+                onPress={onImport}
+                style={{ marginLeft: 8 }}
+                textColor={colors.primary}
+                buttonColor="transparent"
+              >
+                Bulk Import
+              </Button>
+            )}
           </View>
           <Controller
             control={control}

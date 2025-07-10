@@ -21,9 +21,15 @@ export interface Team {
 }
 
 export interface Settings {
-  sortingPreferences: string[]; // e.g. ['skill', 'size', 'teammate']
+  weights: WeightSetings;
   darkMode?: boolean;       // Default: false
 }
+
+export interface WeightSetings {
+  skillLevel: number;
+  teammatePreference: number;
+  teamSizePreference: number;
+};
 
 export interface AppState {
   players: Player[];

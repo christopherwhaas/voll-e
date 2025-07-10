@@ -519,72 +519,51 @@ export default function TournamentScreen() {
                   <>
                     <Text style={[styles.summarySectionTitle, { color: colors.onSurfaceVariant }]}>Ongoing Matches</Text>
                     {getActiveMatches(currentTournament).length === 0 ? (
-                      <Text style={{ color: colors.onSurfaceVariant, fontSize: 13, marginBottom: 4 }}>No active matches</Text>
+                      <View style={[styles.emptyMatchesContainer, { backgroundColor: colors.surfaceVariant }]}>
+                        <MaterialCommunityIcons name="clock-outline" size={24} color={colors.onSurfaceVariant} />
+                        <Text style={[styles.emptyMatchesText, { color: colors.onSurfaceVariant }]}>No active matches</Text>
+                      </View>
                     ) : (
                       getActiveMatches(currentTournament).map((match) => {
                         const team1 = getTeamById(currentTournament, match.team1Id);
                         const team2 = getTeamById(currentTournament, match.team2Id);
                         return (
-                          <View key={match.id} style={[styles.matchRow, { backgroundColor: colors.surfaceVariant, borderRadius: 8, marginBottom: 4, paddingVertical: 6, paddingHorizontal: 8 }]}> 
-                            <Text style={{ fontWeight: 'bold', color: colors.onSurface, minWidth: 24 }}>{team1?.name || 'TBD'}</Text>
-                            <Text style={{ color: colors.onSurface, fontWeight: 'bold', minWidth: 18, textAlign: 'center' }}>{match.team1Wins}</Text>
-                            <Text style={[styles.bracketVsText, { color: colors.onSurfaceVariant }]}>vs</Text>
-                            <Text style={{ color: colors.onSurface, fontWeight: 'bold', minWidth: 18, textAlign: 'center' }}>{match.team2Wins}</Text>
-                            <Text style={{ fontWeight: 'bold', color: colors.onSurface, minWidth: 24 }}>{team2?.name || 'TBD'}</Text>
-                            <Text style={[styles.matchActiveBadge, { backgroundColor: CustomThemeColors[settings.darkMode ? 'dark' : 'light'].info }]}> 
-                              <Text style={[styles.matchActiveBadgeText, { color: CustomThemeColors[settings.darkMode ? 'dark' : 'light'].onInfo }]}>Active</Text>
-                            </Text>
-                            <Text style={{ color: colors.onSurfaceVariant, marginLeft: 8, fontSize: 12 }}>{match.bracket.charAt(0).toUpperCase() + match.bracket.slice(1)} R{match.round}</Text>
+                          <View key={match.id} style={[styles.modernMatchCard, { backgroundColor: colors.surfaceVariant }]}>
+                            <View style={styles.modernMatchHeader}>
+                              <View style={[styles.modernMatchBadge, { backgroundColor: colors.primary }]}>
+                                <Text style={[styles.modernMatchBadgeText, { color: colors.onPrimary }]}>
+                                  {match.bracket === 'winner' ? 'Upper' : match.bracket === 'loser' ? 'Lower' : 'Final'} R{match.round}
+                                </Text>
+                              </View>
+                              <View style={[styles.modernActiveIndicator, { backgroundColor: colors.primary }]} />
+                            </View>
+                            <View style={styles.modernMatchContent}>
+                              <View style={styles.modernTeamRow}>
+                                <View style={[styles.modernTeamBadge, { backgroundColor: team1 ? COLOR_MAP[team1.name] || colors.outline : colors.outline }]} />
+                                <Text style={[styles.modernTeamName, { color: colors.onSurface }]} numberOfLines={1}>
+                                  {team1?.name || 'TBD'}
+                                </Text>
+                                <Text style={[styles.modernTeamScore, { color: colors.onSurface }]}>{match.team1Wins}</Text>
+                              </View>
+                              <View style={styles.modernVsRow}>
+                                <View style={[styles.modernVsLine, { backgroundColor: colors.outlineVariant }]} />
+                                <Text style={[styles.modernVsText, { color: colors.onSurfaceVariant }]}>vs</Text>
+                                <View style={[styles.modernVsLine, { backgroundColor: colors.outlineVariant }]} />
+                              </View>
+                              <View style={styles.modernTeamRow}>
+                                <View style={[styles.modernTeamBadge, { backgroundColor: team2 ? COLOR_MAP[team2.name] || colors.outline : colors.outline }]} />
+                                <Text style={[styles.modernTeamName, { color: colors.onSurface }]} numberOfLines={1}>
+                                  {team2?.name || 'TBD'}
+                                </Text>
+                                <Text style={[styles.modernTeamScore, { color: colors.onSurface }]}>{match.team2Wins}</Text>
+                              </View>
+                            </View>
                           </View>
                         );
                       })
                     )}
                   </>
                 )}
-                {/* Standings Table */}
-                <Text style={[styles.summarySectionTitle, { color: colors.onSurfaceVariant }]}>Team Standings</Text>
-                <View style={styles.standingsTable}>
-                  <View style={[styles.standingsRow, { borderBottomWidth: 2, borderBottomColor: colors.outlineVariant, backgroundColor: colors.surfaceVariant }]}> 
-                    <Text style={[styles.standingsStat, { flex: 0.5, color: colors.onSurfaceVariant }]}> </Text>
-                    <Text style={[styles.standingsStat, { flex: 2, color: colors.onSurfaceVariant }]}>Team</Text>
-                    <Text style={[styles.standingsStat, { flex: 1, color: colors.onSurfaceVariant }]}>Wins</Text>
-                    <Text style={[styles.standingsStat, { flex: 1, color: colors.onSurfaceVariant }]}>Losses</Text>
-                    <Text style={[styles.standingsStat, { flex: 1, color: colors.onSurfaceVariant }]}>Status</Text>
-                  </View>
-                  {currentTournament.teams.map(team => {
-                    const isEliminated = team.losses >= (currentTournament.settings.doubleElimination ? 2 : 1);
-                    const isWinner = currentTournament.isComplete && currentTournament.winner === team.id;
-                    const isRunnerUp = currentTournament.isComplete && currentTournament.runnerUp === team.id;
-                    // Count wins: matches where this team is winner
-                    const wins = currentTournament.rounds.reduce((acc, r) => acc + r.matches.filter(m => m.winnerId === team.id).length, 0);
-                    return (
-                      <View key={team.id} style={[styles.standingsRow, {
-                        backgroundColor: isEliminated ? colors.surfaceDisabled : colors.surface,
-                        borderRadius: 6,
-                        marginBottom: 2,
-                        borderBottomColor: colors.outlineVariant,
-                      }]}> 
-                        <View style={[styles.standingsTeamBadge, { backgroundColor: COLOR_MAP[team.name] || colors.outline }]} />
-                        <Text style={[
-                          styles.standingsTeamName,
-                          isWinner ? styles.standingsWinner : isRunnerUp ? styles.standingsRunnerUp : null,
-                          { flex: 2, color: isWinner
-                              ? CustomThemeColors[settings.darkMode ? 'dark' : 'light'].gold
-                              : isRunnerUp
-                              ? CustomThemeColors[settings.darkMode ? 'dark' : 'light'].silver
-                              : isEliminated
-                              ? colors.onSurfaceDisabled
-                              : colors.onSurface }
-                        ]} numberOfLines={1} ellipsizeMode="tail">{team.name}</Text>
-                        <Text style={[styles.standingsStat, { flex: 1, color: isEliminated ? colors.onSurfaceDisabled : colors.onSurface }]}>{wins}</Text>
-                        <Text style={[styles.standingsStat, { flex: 1, color: isEliminated ? colors.onSurfaceDisabled : colors.onSurface }]}>{team.losses}</Text>
-                        <Text style={[styles.standingsStat, { flex: 1, color: isEliminated ? colors.onSurfaceDisabled : colors.onSurface }]}> 
-                          {isWinner ? 'Winner' : isRunnerUp ? '2nd Place' : isEliminated ? 'Eliminated' : 'In Play'}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
                 {/* Winner/Runner-up Section if complete */}
                 {currentTournament.isComplete && currentTournament.winner && (
                   <View style={{ marginTop: 12, alignItems: 'center' }}>
@@ -637,7 +616,7 @@ export default function TournamentScreen() {
             />
           </View>
 
-          <ScrollView style={sharedStyles.modalScrollView}>
+          <ScrollView showsVerticalScrollIndicator={false} style={sharedStyles.modalScrollView}>
             {/* Team Mode Tab Selector */}
             <TabSelector
               options={[

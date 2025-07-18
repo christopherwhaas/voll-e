@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.christopherhaas.volle"
     },
     "android": {
       "adaptiveIcon": {
@@ -24,6 +25,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "3d5644c7-0b53-43b0-b0a2-9d9a45238ff7"
+      }
     }
   }
 }

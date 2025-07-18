@@ -74,7 +74,7 @@ export default function PlayersScreen() {
     
     for (const player of data) {
       if (!player.firstName || typeof player.firstName !== 'string') return false;
-      if (!player.lastName || typeof player.lastName !== 'string') return false;
+      if (player.lastName !== undefined && typeof player.lastName !== 'string') return false;
       if (!player.skillLevel || typeof player.skillLevel !== 'string') return false;
       
       // Optional fields
@@ -272,7 +272,7 @@ export default function PlayersScreen() {
                 <Text style={{ color: colors.error, marginBottom: 16 }}>{importError}</Text>
               ) : null}
               <Text variant="bodySmall" style={{ marginBottom: 16, opacity: 0.7, color: colors.onSurface }}>
-                Expected format: [{'{"firstName": "string", "lastName": "string", "skillLevel": "string", ...}'}]
+                Expected format: [{'{"firstName": "string", "lastName": "string (optional)", "skillLevel": "string", ...}'}]
               </Text>
               <Button mode="contained" onPress={handleImportSubmit} style={[{ marginBottom: 12 }, sharedStyles.cardBorderRadius]} buttonColor={colors.primary} textColor={colors.onPrimary}>
                 Import Players

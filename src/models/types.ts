@@ -7,7 +7,7 @@ export type Position = 'Hitter' | 'Setter' | 'Libero' | 'Blocker' | 'Any';
 export interface Player {
   id: string;
   firstName: string;
-  lastName: string;
+  lastName?: string; // Optional last name
   skillLevel: SkillLevel;
   teamSizePreference?: TeamSize; // Default is 'Any'
   teammatePreference?: string; // Player id of preferred teammate

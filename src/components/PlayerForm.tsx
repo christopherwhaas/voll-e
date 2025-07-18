@@ -30,7 +30,7 @@ const teamSizeOptions = teamSizes.map(size => ({ key: size, label: size }));
 
 const schema = yup.object({
   firstName: yup.string().required('First name is required'),
-  lastName: yup.string().required('Last name is required'),
+  lastName: yup.string().nullable(),
   skillLevel: yup.mixed<SkillLevel>().oneOf(skillLevels).required(),
   teamSizePreference: yup.mixed<TeamSize>().oneOf(teamSizes).required(),
   emoji: yup.string().oneOf(EMOJI_LIST).required(),
@@ -39,7 +39,7 @@ const schema = yup.object({
 
 export interface PlayerFormValues {
   firstName: string;
-  lastName: string;
+  lastName?: string;
   skillLevel: SkillLevel;
   teamSizePreference: TeamSize;
   emoji: string;
@@ -132,11 +132,12 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
             name="lastName"
             render={({ field: { onChange, value }, fieldState: { error } }) => (
               <TextInput
-                label="Last Name"
+                label="Last Name (Optional)"
                 value={value}
                 onChangeText={onChange}
                 error={!!error}
                 style={styles.input}
+                placeholder="Enter last name (optional)"
               />
             )}
           />
@@ -222,7 +223,7 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
                         {value
                           ? (() => {
                               const teammate = players.find(p => p.id === value);
-                              return teammate ? `${teammate.emoji || ''} ${teammate.firstName} ${teammate.lastName}` : 'None';
+                              return teammate ? `${teammate.emoji || ''} ${teammate.firstName}${teammate.lastName ? ` ${teammate.lastName}` : ''}` : 'None';
                             })()
                           : 'None'}
                       </Button>
@@ -236,7 +237,7 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
                         <Menu.Item
                           key={p.id}
                           onPress={() => { onChange(p.id); setTeammateMenuVisible(false); }}
-                          title={`${p.emoji || ''} ${p.firstName} ${p.lastName}`}
+                          title={`${p.emoji || ''} ${p.firstName}${p.lastName ? ` ${p.lastName}` : ''}`}
                         />
                       ))}
                   </Menu>

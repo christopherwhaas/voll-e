@@ -79,7 +79,7 @@ export default function PlayerListItem({
       <View style={styles.infoCol}>
         <View style={styles.nameRow}>
           <Text style={[styles.name, { color: colors.onSurface }]} numberOfLines={1} ellipsizeMode="tail">
-            {player.firstName} {player.lastName}
+            {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
           </Text>
           {showSkillLevel && (
             <Text style={[styles.skillBadge, { backgroundColor: badgeBgColor, color: badgeText, borderColor: badgeText }]}> 

@@ -376,7 +376,7 @@ export default function TeamsScreen() {
                     availablePlayers.map(player => (
                       <List.Item
                         key={player.id}
-                        title={`${player.firstName} ${player.lastName}`}
+                        title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
                         left={props => (
                           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <Text style={{ fontSize: 24, marginRight: 8 }}>{player.emoji || '👤'}</Text>
@@ -465,7 +465,7 @@ export default function TeamsScreen() {
                         numberOfLines={1} 
                         ellipsizeMode="tail"
                       >
-                        {player.firstName} {player.lastName}
+                        {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
                       </Text>
                       <View style={{ flexDirection: 'row' }}>
                         {manualTeams.map((team, index) => (
@@ -499,7 +499,7 @@ export default function TeamsScreen() {
                           numberOfLines={1} 
                           ellipsizeMode="tail"
                         >
-                          {player.firstName} {player.lastName}
+                          {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
                         </Text>
                         <IconButton
                           icon="close"

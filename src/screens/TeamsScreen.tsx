@@ -11,7 +11,7 @@ import TeamCard from '../components/TeamCard';
 import SessionPlayersCard from '../components/SessionPlayersCard';
 import SettingsModal from '../components/SettingsModal';
 import TabSelector from '../components/TabSelector';
-import { generateRandomTeams, generateBestTeamSet } from '../utils/teamGeneration';
+import { generateRandomTeams, generateSnakeDraftTeams } from '../utils/teamGeneration';
 import styles from '../styles/TeamsScreenStyles';
 
 // Helper to get random color names for teams
@@ -62,18 +62,17 @@ export default function TeamsScreen() {
 
   // Random Team Generation
   const handleRandomTeams = () => {
-    const teamsArr = generateRandomTeams(players, sessionPlayerIds, numberOfNets, COLOR_NAMES);
+    const teamsArr = generateRandomTeams(players.filter(p => sessionPlayerIds.includes(p.id)), numberOfNets, COLOR_NAMES);
     setTeams(teamsArr);
   };
 
   // Balanced Team Generation
   const handleBalancedTeams = () => {
     const weights = settings.weights ?? {skillLevel: 3, teammatePreference: 2, teamSizePreference: 1};
-    const teamsArr = generateBestTeamSet(
+    const teamsArr = generateSnakeDraftTeams(
       players.filter(p => sessionPlayerIds.includes(p.id)),
       { numberOfNets, weights },
-      COLOR_NAMES,
-      5
+      COLOR_NAMES
     );
     setTeams(teamsArr);
   };

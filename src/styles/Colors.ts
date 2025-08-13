@@ -1,7 +1,7 @@
 export const CustomThemeColors = {
   light: {
     // General-Purpose UI
-    background: "#FFFFFF", // App Background
+    background: "#ECEFF1", // App Background
     onBackground: "#1A202C", // Primary Text
     surface: "#F7FAFC", // Surface / Panel
     onSurface: "#1A202C", // Primary Text
@@ -16,28 +16,28 @@ export const CustomThemeColors = {
     inversePrimary: "#2B6CB0",
     // Primary/Secondary/Tertiary
     primary: "#2B6CB0", // Blue
-    onPrimary: "#FFFFFF",
+    onPrimary: "#ECEFF1",
     primaryContainer: "#E2E8F0", // Hover Surface
     onPrimaryContainer: "#1A202C",
     secondary: "#38A169", // Green
-    onSecondary: "#FFFFFF",
+    onSecondary: "#ECEFF1",
     secondaryContainer: "#C6F6D5",
     onSecondaryContainer: "#22543D",
     tertiary: "#805AD5", // Purple
-    onTertiary: "#FFFFFF",
+    onTertiary: "#ECEFF1",
     tertiaryContainer: "#E9D8FD",
     onTertiaryContainer: "#44337A",
     // Status
     error: "#C53030",
-    onError: "#FFFFFF",
+    onError: "#ECEFF1",
     errorContainer: "#FC8181",
     onErrorContainer: "#C53030",
     success: "#2F855A",
-    onSuccess: "#FFFFFF",
+    onSuccess: "#ECEFF1",
     warning: "#DD6B20",
-    onWarning: "#FFFFFF",
+    onWarning: "#ECEFF1",
     info: "#3182CE",
-    onInfo: "#FFFFFF",
+    onInfo: "#ECEFF1",
     // Tag/Category
     blue: "#2B6CB0",
     green: "#38A169",
@@ -69,9 +69,9 @@ export const CustomThemeColors = {
   dark: {
     // General-Purpose UI
     background: "#0B1B2B", // App Background
-    onBackground: "#FFFFFF", // Primary Text
+    onBackground: "#ECEFF1", // Primary Text
     surface: "#132238", // Surface / Panel
-    onSurface: "#FFFFFF", // Primary Text
+    onSurface: "#ECEFF1", // Primary Text
     surfaceVariant: "#0E1A29", // Sidebar / Navigation
     onSurfaceVariant: "#A0AEC0", // Secondary Text
     outline: "#2D3748", // Border / Divider
@@ -85,7 +85,7 @@ export const CustomThemeColors = {
     primary: "#4299E1", // Blue
     onPrimary: "#0B1B2B",
     primaryContainer: "#1C2C3E", // Hover Surface
-    onPrimaryContainer: "#FFFFFF",
+    onPrimaryContainer: "#ECEFF1",
     secondary: "#68D391", // Green
     onSecondary: "#0B1B2B",
     secondaryContainer: "#22543D",
@@ -96,7 +96,7 @@ export const CustomThemeColors = {
     onTertiaryContainer: "#E9D8FD",
     // Status
     error: "#E53E3E",
-    onError: "#FFFFFF",
+    onError: "#ECEFF1",
     errorContainer: "#FC8181",
     onErrorContainer: "#E53E3E",
     success: "#48BB78",

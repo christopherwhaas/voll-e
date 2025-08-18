@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { Text, Button, Portal, Modal, List, IconButton, Checkbox, Dialog, RadioButton, useTheme } from 'react-native-paper';
+import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { Text, Button, Portal, Modal, List, IconButton, Checkbox, Dialog, RadioButton, useTheme, Surface } from 'react-native-paper';
+import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useAppState } from '../models/AppStateContext';
 import { Player, COLOR_NAMES, SKILL_VALUES, Team } from '../models/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +9,6 @@ import { SCREEN_MARGIN, SORT_OPTIONS } from '../utils/constants';
 import { sharedStyles, screenHeight } from '../styles/shared';
 import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import TeamCard from '../components/TeamCard';
-import SessionPlayersCard from '../components/SessionPlayersCard';
 import SettingsModal from '../components/SettingsModal';
 import TabSelector from '../components/TabSelector';
 import { generateRandomTeams, generateSnakeDraftTeams } from '../utils/teamGeneration';
@@ -33,10 +33,14 @@ export default function TeamsScreen() {
   const { players, sessionPlayerIds, setSessionPlayerIds, teams, setTeams, setPlayers, numberOfNets, setNumberOfNets, settings, setSettings } = useAppState();
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
-  const [moveDialogVisible, setMoveDialogVisible] = React.useState(false);
-  const [movePlayer, setMovePlayer] = React.useState<{ player: Player; fromTeamId: string } | null>(null);
-  const [moveTargetTeamId, setMoveTargetTeamId] = React.useState<string>('');
-  const [sessionCardExpanded, setSessionCardExpanded] = React.useState(true);
+  const [swapDialogVisible, setSwapDialogVisible] = React.useState(false);
+  const [swapPlayer, setSwapPlayer] = React.useState<{ player: Player; fromTeamId: string } | null>(null);
+  const [swapTargetPlayer, setSwapTargetPlayer] = React.useState<{ player: Player; teamId: string } | null>(null);
+  const [sessionDrawerVisible, setSessionDrawerVisible] = React.useState(false);
+  const [sessionDrawerExpanded, setSessionDrawerExpanded] = React.useState(false);
+  const [drawerTranslateY, setDrawerTranslateY] = React.useState(0);
+  const [drawerHeight, setDrawerHeight] = React.useState(0);
+  const [minDrawerHeight, setMinDrawerHeight] = React.useState(0);
   const [manualModalVisible, setManualModalVisible] = React.useState(false);
   const [manualTeams, setManualTeams] = React.useState<Team[]>([]);
   const [unassignedPlayers, setUnassignedPlayers] = React.useState<Player[]>([]);
@@ -52,6 +56,52 @@ export default function TeamsScreen() {
   const sessionPlayers = players.filter(p => sessionPlayerIds.includes(p.id));
   // Players not in session
   const availablePlayers = players.filter(p => !sessionPlayerIds.includes(p.id));
+
+  // Auto-show session drawer when no players are in session
+  React.useEffect(() => {
+    if (sessionPlayers.length === 0) {
+      setSessionDrawerVisible(true);
+      setSessionDrawerExpanded(true);
+      setDrawerTranslateY(0);
+    } else if (!sessionDrawerVisible) {
+      // Only set visible if it's not already visible, don't change expanded state
+      setSessionDrawerVisible(true);
+    }
+  }, [sessionPlayers.length, sessionDrawerVisible]);
+
+  // Gesture handler for drawer swipe
+  const onGestureEvent = React.useCallback((event: any) => {
+    const { translationY } = event.nativeEvent;
+    const maxTranslateY = drawerHeight - minDrawerHeight;
+    const newTranslateY = Math.max(0, Math.min(maxTranslateY, translationY));
+    setDrawerTranslateY(newTranslateY);
+  }, [drawerHeight, minDrawerHeight]);
+
+  // Handle swipe up to expand when collapsed
+  const onGestureEventUp = React.useCallback((event: any) => {
+    const { translationY } = event.nativeEvent;
+    if (translationY < 0 && !sessionDrawerExpanded) {
+      // Swiping up when collapsed - expand the drawer
+      setSessionDrawerExpanded(true);
+      setDrawerTranslateY(0);
+    }
+  }, [sessionDrawerExpanded]);
+
+  const onHandlerStateChange = React.useCallback((event: any) => {
+    const { state, translationY } = event.nativeEvent;
+    
+    if (state === State.END) {
+      const threshold = (drawerHeight - minDrawerHeight) / 2;
+      const shouldCollapse = translationY > threshold;
+      
+      if (shouldCollapse) {
+        setSessionDrawerExpanded(false);
+      } else {
+        setSessionDrawerExpanded(true);
+      }
+      setDrawerTranslateY(0);
+    }
+  }, [drawerHeight, minDrawerHeight]);
 
   // Team generation options for TabSelector
   const generationOptions = [
@@ -195,30 +245,50 @@ export default function TeamsScreen() {
     ).toFixed(2);
   };
 
-  const handleMovePlayer = (player: Player, fromTeamId: string) => {
-    setMovePlayer({ player, fromTeamId });
-    setMoveTargetTeamId('');
-    setMoveDialogVisible(true);
+  // Helper to get all players from other teams for swapping
+  const getOtherTeamPlayers = (excludeTeamId: string): Array<{ player: Player; teamId: string; teamName: string }> => {
+    const otherPlayers: Array<{ player: Player; teamId: string; teamName: string }> = [];
+    teams.forEach(team => {
+      if (team.id !== excludeTeamId) {
+        team.players.forEach(player => {
+          otherPlayers.push({ player, teamId: team.id, teamName: team.name });
+        });
+      }
+    });
+    return otherPlayers;
   };
 
-  const confirmMovePlayer = () => {
-    if (!movePlayer || !moveTargetTeamId) return;
-    // Remove from old team
+  const handleSwapPlayer = (player: Player, fromTeamId: string) => {
+    setSwapPlayer({ player, fromTeamId });
+    setSwapTargetPlayer(null);
+    setSwapDialogVisible(true);
+  };
+
+  const confirmSwapPlayer = () => {
+    if (!swapPlayer || !swapTargetPlayer) return;
+    
+    // Perform the swap
     const updatedTeams = teams.map(t => {
-      if (t.id === movePlayer.fromTeamId) {
-        return { ...t, players: t.players.filter(p => p.id !== movePlayer.player.id) };
-      }
-      return t;
-    }).map(t => {
-      if (t.id === moveTargetTeamId) {
-        return { ...t, players: [...t.players, movePlayer.player] };
+      if (t.id === swapPlayer.fromTeamId) {
+        // Remove the first player and add the second player
+        return { 
+          ...t, 
+          players: t.players.filter(p => p.id !== swapPlayer.player.id).concat([swapTargetPlayer.player])
+        };
+      } else if (t.id === swapTargetPlayer.teamId) {
+        // Remove the second player and add the first player
+        return { 
+          ...t, 
+          players: t.players.filter(p => p.id !== swapTargetPlayer.player.id).concat([swapPlayer.player])
+        };
       }
       return t;
     });
+    
     setTeams(updatedTeams);
-    setMoveDialogVisible(false);
-    setMovePlayer(null);
-    setMoveTargetTeamId('');
+    setSwapDialogVisible(false);
+    setSwapPlayer(null);
+    setSwapTargetPlayer(null);
   };
 
   // Team Generation Handler
@@ -295,16 +365,7 @@ export default function TeamsScreen() {
         </Button>
       </View>
       
-      <SessionPlayersCard
-        sessionPlayers={sessionPlayers}
-        numberOfNets={numberOfNets}
-        setNumberOfNets={setNumberOfNets}
-        isExpanded={sessionCardExpanded}
-        setIsExpanded={setSessionCardExpanded}
-        onAddPlayer={() => setModalVisible(true)}
-        onRemovePlayer={handleRemoveFromSession}
-        swipeableRefs={swipeableRefs}
-      />
+
     </>
   );
 
@@ -316,7 +377,8 @@ export default function TeamsScreen() {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1 }} edges={['top','left','right']}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top','left','right']}>
       <FlatList
         data={teams}
         keyExtractor={team => team.id}
@@ -324,7 +386,7 @@ export default function TeamsScreen() {
           <TeamCard
             team={team}
             onEditTeamName={handleEditTeamName}
-            onMovePlayer={handleMovePlayer}
+            onMovePlayer={handleSwapPlayer}
             onRemovePlayer={handleRemovePlayerFromTeam}
             onDragEnd={data => setTeams(teams.map(t => t.id === team.id ? { ...t, players: data } : t))}
             getTeamAvgSkill={getTeamAvgSkill}
@@ -332,10 +394,15 @@ export default function TeamsScreen() {
         )}
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
-        contentContainerStyle={{ flexGrow: 1, paddingTop: 8, paddingHorizontal: SCREEN_MARGIN }}
         ListEmptyComponent={<View style={styles.teamsContainer}><Text>Teams will appear here after generation.</Text></View>}
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ 
+          flexGrow: 1, 
+          paddingTop: 8, 
+          paddingHorizontal: SCREEN_MARGIN,
+          paddingBottom: sessionDrawerVisible ? 200 : 20 // Add space for drawer
+        }}
       />
       <Portal>
         <Modal visible={modalVisible} onDismiss={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); }} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 
@@ -409,18 +476,61 @@ export default function TeamsScreen() {
             </ScrollView>
           </KeyboardAvoidingView>
         </Modal>
-        <Dialog visible={moveDialogVisible} onDismiss={() => setMoveDialogVisible(false)} style={[{ backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
-          <Dialog.Title style={{ color: colors.onBackground }}>Move Player to Team</Dialog.Title>
+        <Dialog visible={swapDialogVisible} onDismiss={() => setSwapDialogVisible(false)} style={[{ backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
+          <Dialog.Title style={{ color: colors.onBackground }}>Swap Players</Dialog.Title>
           <Dialog.Content>
-            <RadioButton.Group onValueChange={setMoveTargetTeamId} value={moveTargetTeamId}>
-              {teams.filter(t => t.id !== movePlayer?.fromTeamId).map(t => (
-                <RadioButton.Item key={t.id} label={t.name} value={t.id} color={colors.primary} labelStyle={{ color: colors.onBackground }} />
-              ))}
-            </RadioButton.Group>
+            <Text style={{ color: colors.onBackground, marginBottom: 16 }}>
+              Select a player to swap with {swapPlayer?.player.firstName}{swapPlayer?.player.lastName ? ` ${swapPlayer.player.lastName}` : ''}
+            </Text>
+            {swapTargetPlayer && (
+              <View style={{ 
+                backgroundColor: colors.primaryContainer, 
+                padding: 12, 
+                borderRadius: 8, 
+                marginBottom: 16,
+                borderLeftWidth: 4,
+                borderLeftColor: colors.primary
+              }}>
+                <Text style={{ color: colors.onBackground, fontWeight: 'bold', marginBottom: 4 }}>
+                  Swap Preview:
+                </Text>
+                <Text style={{ color: colors.onBackground }}>
+                  {swapPlayer?.player.firstName}{swapPlayer?.player.lastName ? ` ${swapPlayer.player.lastName}` : ''} ↔ {swapTargetPlayer.player.firstName}{swapTargetPlayer.player.lastName ? ` ${swapTargetPlayer.player.lastName}` : ''}
+                </Text>
+              </View>
+            )}
+            <ScrollView style={{ maxHeight: 300 }}>
+              {getOtherTeamPlayers(swapPlayer?.fromTeamId || '').length === 0 ? (
+                <Text style={{ color: colors.onBackground, textAlign: 'center', fontStyle: 'italic', opacity: 0.6, padding: 20 }}>
+                  No other players available to swap with
+                </Text>
+              ) : (
+                getOtherTeamPlayers(swapPlayer?.fromTeamId || '').map(({ player, teamId, teamName }) => (
+                  <List.Item
+                    key={player.id}
+                    title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
+                    description={`${teamName} Team`}
+                    left={props => (
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
+                        <RadioButton
+                          value={player.id}
+                          status={swapTargetPlayer?.player.id === player.id ? 'checked' : 'unchecked'}
+                          onPress={() => setSwapTargetPlayer({ player, teamId })}
+                          color={colors.primary}
+                        />
+                      </View>
+                    )}
+                    onPress={() => setSwapTargetPlayer({ player, teamId })}
+                    style={{ backgroundColor: swapTargetPlayer?.player.id === player.id ? colors.primaryContainer : 'transparent' }}
+                  />
+                ))
+              )}
+            </ScrollView>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setMoveDialogVisible(false)} textColor={colors.error}>Cancel</Button>
-            <Button onPress={confirmMovePlayer} disabled={!moveTargetTeamId} textColor={colors.secondary}>Move</Button>
+            <Button onPress={() => setSwapDialogVisible(false)} textColor={colors.error}>Cancel</Button>
+            <Button onPress={confirmSwapPlayer} disabled={!swapTargetPlayer} textColor={colors.secondary}>Swap</Button>
           </Dialog.Actions>
         </Dialog>
         <Modal visible={manualModalVisible} onDismiss={handleCancelManualTeams} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
@@ -536,6 +646,102 @@ export default function TeamsScreen() {
           }}
         />
       </Portal>
+      
+      {/* Session Drawer */}
+      {sessionDrawerVisible && (
+        <PanGestureHandler
+          onGestureEvent={(event) => {
+            onGestureEvent(event);
+            onGestureEventUp(event);
+          }}
+          onHandlerStateChange={onHandlerStateChange}
+        >
+          <Surface 
+            style={[
+              styles.sessionDrawer, 
+              { 
+                backgroundColor: colors.surface,
+                transform: [{ translateY: drawerTranslateY }]
+              }
+            ]}
+            onLayout={(event) => {
+              const { height } = event.nativeEvent.layout;
+              setDrawerHeight(height);
+            }}
+          >
+            {/* Drawer Tab Indicator */}
+            <View style={styles.drawerTab}>
+              <View style={[styles.drawerTabHandle, { backgroundColor: colors.onSurfaceVariant }]} />
+            </View>
+            
+            <View 
+              style={styles.drawerHeader}
+              onLayout={(event: any) => {
+                const { height } = event.nativeEvent.layout;
+                setMinDrawerHeight(height);
+              }}
+            >
+              <View style={styles.drawerTitleContainer}>
+                <Text variant="titleMedium" style={[styles.drawerTitle, { color: colors.onSurface }]}>
+                  Current Session
+                </Text>
+                <Text style={[styles.drawerSubtitle, { color: colors.onSurfaceVariant }]}>
+                  {sessionPlayers.length} player{sessionPlayers.length !== 1 ? 's' : ''} • {numberOfNets} net{numberOfNets !== 1 ? 's' : ''}
+                </Text>
+              </View>
+            </View>
+            
+            {sessionDrawerExpanded && (
+              <ScrollView 
+                style={styles.drawerContent}
+                showsVerticalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              >
+                <View style={styles.netsRow}>
+                  <Text style={[styles.netsLabel, { color: colors.onSurface }]}>Nets for this session:</Text>
+                  <IconButton icon="minus" size={20} onPress={() => setNumberOfNets(Math.max(1, numberOfNets - 1))} />
+                  <Text style={[styles.netsValue, { color: colors.onSurface }]}>{numberOfNets}</Text>
+                  <IconButton icon="plus" size={20} onPress={() => setNumberOfNets(numberOfNets + 1)} />
+                </View>
+                
+                <View style={styles.playersSection}>
+                  <View style={styles.playersHeader}>
+                    <Text style={[styles.playersTitle, { color: colors.onSurface }]}>Session Players</Text>
+                    <IconButton
+                      icon="plus"
+                      size={24}
+                      onPress={() => setModalVisible(true)}
+                      style={styles.addButton}
+                    />
+                  </View>
+                  
+                  {sessionPlayers.length === 0 ? (
+                    <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
+                      No players selected for this session.
+                    </Text>
+                  ) : (
+                    sessionPlayers.map(player => (
+                      <View key={player.id} style={styles.playerItem}>
+                        <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
+                        <Text style={[styles.playerName, { color: colors.onSurface }]}>
+                          {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
+                        </Text>
+                        <IconButton
+                          icon="close"
+                          size={20}
+                          onPress={() => handleRemoveFromSession(player.id)}
+                          iconColor={colors.error}
+                        />
+                      </View>
+                    ))
+                  )}
+                </View>
+              </ScrollView>
+            )}
+          </Surface>
+        </PanGestureHandler>
+      )}
     </SafeAreaView>
+    </GestureHandlerRootView>
   );
 } 

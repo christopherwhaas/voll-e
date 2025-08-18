@@ -40,6 +40,110 @@ const styles = StyleSheet.create({
   screenTitle: { fontWeight: 'bold' },
   settingsButton: { marginLeft: 8 },
   tabSelector: { marginBottom: 12 },
+  
+  // Session Drawer Styles
+  sessionDrawer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  drawerTab: {
+    alignItems: 'center',
+    paddingTop: 8,
+    paddingBottom: 4,
+  },
+  drawerTabHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    opacity: 0.5,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  drawerTitleContainer: {
+    flex: 1,
+  },
+  drawerTitle: {
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  drawerSubtitle: {
+    fontSize: 12,
+    opacity: 0.7,
+  },
+  drawerContent: {
+    padding: 16,
+    maxHeight: 400, // Maximum height to prevent going off screen
+  },
+  netsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+  },
+  netsLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  netsValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginHorizontal: 8,
+    minWidth: 20,
+    textAlign: 'center',
+  },
+  playersSection: {
+    marginTop: 8,
+  },
+  playersHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  playersTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  playerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  playerName: {
+    flex: 1,
+    fontSize: 14,
+    marginLeft: 8,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontStyle: 'italic',
+    opacity: 0.6,
+    padding: 20,
+  },
 });
 
 export default styles; 

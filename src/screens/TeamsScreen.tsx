@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import { Text, Button, Portal, Modal, List, IconButton, Checkbox, Dialog, RadioButton, useTheme, Surface } from 'react-native-paper';
 import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
 import { useAppState } from '../models/AppStateContext';
@@ -424,17 +424,36 @@ export default function TeamsScreen() {
             >
               {modalMode === 'select' ? (
                 <>
-                  <Button mode="contained" style={[{ marginBottom: 16 }, sharedStyles.cardBorderRadius]} onPress={handleAddSelected} disabled={selectedIds.length === 0} buttonColor={colors.primary} textColor={colors.onPrimary}>
+                  <Button 
+                    mode="outlined" 
+                    style={[{ marginBottom: 16 }, sharedStyles.cardBorderRadius]} 
+                    onPress={handleAddSelected} 
+                    disabled={selectedIds.length === 0} 
+                    textColor={colors.primary}
+                  >
                     Add to Session ({selectedIds.length})
                   </Button>
-                  <Text variant="titleMedium" style={{ marginBottom: 8 }}>Select Players</Text>
-                  <View style={{ flexDirection: 'row', marginBottom: 16 }}>
-                    <Button mode="outlined" style={[{ flex: 1, marginRight: 8 }, sharedStyles.cardBorderRadius]} onPress={handleSelectAll} textColor={colors.secondary} >
-                      Select All
-                    </Button>
-                    <Button mode="outlined" style={[{ flex: 1 }, sharedStyles.cardBorderRadius]} onPress={handleUnselectAll} textColor={colors.secondary} >
-                      Unselect All
-                    </Button>
+                  <View style={styles.selectHeader}>
+                    <Text variant="titleMedium" style={{ color: colors.onBackground }}>Select Players</Text>
+                    <TouchableOpacity
+                      style={styles.selectAllContainer}
+                      onPress={() => {
+                        if (selectedIds.length === availablePlayers.length) {
+                          handleUnselectAll();
+                        } else {
+                          handleSelectAll();
+                        }
+                      }}
+                    >
+                      <Checkbox
+                        status={selectedIds.length === availablePlayers.length && availablePlayers.length > 0 ? 'checked' : 'unchecked'}
+                        disabled={true}
+                        color={colors.primary}
+                      />
+                      <Text style={[styles.selectAllText, { color: colors.onSurfaceVariant }]}>
+                        {selectedIds.length === availablePlayers.length && availablePlayers.length > 0 ? 'Unselect All' : 'Select All'}
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                   {availablePlayers.length === 0 ? (
                     <Text>No available players. Add a new player below.</Text>

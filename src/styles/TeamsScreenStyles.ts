@@ -144,6 +144,22 @@ const styles = StyleSheet.create({
     opacity: 0.6,
     padding: 20,
   },
+  
+  // Select Players Modal Styles
+  selectHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  selectAllContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  selectAllText: {
+    fontSize: 14,
+    marginLeft: 8,
+  },
 });
 
 export default styles; 

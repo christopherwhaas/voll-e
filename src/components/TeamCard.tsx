@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { View, StyleSheet, TextInput as RNTextInput } from 'react-native';
+import { View, StyleSheet, TextInput as RNTextInput, FlatList } from 'react-native';
 import { Card, Text, List, IconButton, useTheme } from 'react-native-paper';
-import DraggableFlatList from 'react-native-draggable-flatlist';
 import { Team, Player, COLOR_MAP } from '../models/types';
 import PlayerListItem from './PlayerListItem';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -12,7 +11,6 @@ interface TeamCardProps {
   onEditTeamName: (teamId: string, newName: string) => void;
   onMovePlayer: (player: Player, fromTeamId: string) => void;
   onRemovePlayer: (teamId: string, playerId: string) => void;
-  onDragEnd: (data: Player[]) => void;
   getTeamAvgSkill: (team: Team) => string;
 }
 
@@ -21,7 +19,6 @@ export default function TeamCard({
   onEditTeamName,
   onMovePlayer,
   onRemovePlayer,
-  onDragEnd,
   getTeamAvgSkill,
 }: TeamCardProps) {
   const { colors } = useTheme();
@@ -48,10 +45,10 @@ export default function TeamCard({
         {team.players.length === 0 ? (
           <Text style={{ color: colors.onSurface, opacity: 0.6 }}>No players assigned.</Text>
         ) : (
-          <DraggableFlatList
+          <FlatList
             data={team.players}
-            keyExtractor={item => item.id}
-            renderItem={({ item, drag }) => (
+            keyExtractor={(item: Player) => item.id}
+            renderItem={({ item }: { item: Player }) => (
               <Swipeable
                 ref={ref => { swipeableRefs.current[item.id] = ref; }}
                 renderRightActions={() => (
@@ -63,13 +60,11 @@ export default function TeamCard({
               >
                 <PlayerListItem
                   player={item}
-                  onLongPress={drag}
                   rightIcon="chevron-left"
                   onRightIconPress={() => swipeableRefs.current[item.id]?.openRight()}
                 />
               </Swipeable>
             )}
-            onDragEnd={({ data }) => onDragEnd(data)}
             scrollEnabled={false}
             style={{ backgroundColor: 'transparent' }}
           />

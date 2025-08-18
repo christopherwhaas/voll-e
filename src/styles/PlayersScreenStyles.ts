@@ -44,7 +44,7 @@ export default StyleSheet.create({
   input: {
     marginBottom: 16,
   },
-  playersCard: {
-    // flex: 1, // Removed to prevent card from filling the screen
+  playersList: {
+    flex: 1,
   },
 }); 

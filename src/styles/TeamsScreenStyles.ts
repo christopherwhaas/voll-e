@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { SCREEN_MARGIN } from '../utils/constants';
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -27,10 +28,14 @@ const styles = StyleSheet.create({
   buttonContainer: { marginBottom: 12 },
   label: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
   manualTeamCard: { marginBottom: 12 },
-  manualPlayerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
+  manualPlayerItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4, minHeight: 40 },
   unassignedContainer: { marginBottom: 16 },
+  tableContainer: { flexDirection: 'row' },
+  fixedColumn: { width: 120, backgroundColor: 'transparent' },
+  scrollableColumns: { flex: 1 },
+  tableRow: { height: 48, flexDirection: 'row', alignItems: 'center' },
   teamHeaders: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#e0e0e0' },
-  teamHeaderText: { fontSize: 14, fontWeight: 'bold', textAlign: 'center', minWidth: 40 },
+  teamHeaderText: { fontSize: 14, fontWeight: 'bold', textAlign: 'center' },
   generationContainer: { marginBottom: 16 },
   generationRow: { flexDirection: 'row', alignItems: 'center' },
   generateButton: { flex: 1, marginRight: 8, borderRadius: 8 },
@@ -96,7 +101,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#f5f5f5',
     borderRadius: 8,
   },
   netsLabel: {
@@ -129,7 +133,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#f8f8f8',
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -160,6 +163,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 8,
   },
+  
+  // Fixed Header Style
+  fixedHeader: {
+    paddingHorizontal: SCREEN_MARGIN,
+    paddingTop: 8,
+    backgroundColor: 'transparent',
+  },
+  
+  // Title Button Styles
+  titleButton: {
+    marginRight: 4,
+  },
+  
+  // Generate Button Styles
+  generateContainer: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+
 });
 
 export default styles; 

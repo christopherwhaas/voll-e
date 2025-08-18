@@ -44,7 +44,7 @@ export default function TeamsScreen() {
   const [manualModalVisible, setManualModalVisible] = React.useState(false);
   const [manualTeams, setManualTeams] = React.useState<Team[]>([]);
   const [unassignedPlayers, setUnassignedPlayers] = React.useState<Player[]>([]);
-  const [generationMode, setGenerationMode] = React.useState<'random' | 'balanced' | 'manual'>('balanced');
+
   const [settingsModalVisible, setSettingsModalVisible] = React.useState(false);
   // Modal mode: 'select' or 'add'
   const [modalMode, setModalMode] = React.useState<'select' | 'add'>('select');
@@ -103,17 +103,13 @@ export default function TeamsScreen() {
     }
   }, [drawerHeight, minDrawerHeight]);
 
-  // Team generation options for TabSelector
-  const generationOptions = [
-    { key: 'random', label: 'Random' },
-    { key: 'balanced', label: 'Balanced' },
-    { key: 'manual', label: 'Manual' }
-  ];
+
 
   // Random Team Generation
   const handleRandomTeams = () => {
     const teamsArr = generateRandomTeams(players.filter(p => sessionPlayerIds.includes(p.id)), numberOfNets, COLOR_NAMES);
     setTeams(teamsArr);
+    setSessionDrawerExpanded(false);
   };
 
   // Balanced Team Generation
@@ -125,6 +121,7 @@ export default function TeamsScreen() {
       COLOR_NAMES
     );
     setTeams(teamsArr);
+    setSessionDrawerExpanded(false);
   };
 
   // Manual Team Generation
@@ -176,6 +173,7 @@ export default function TeamsScreen() {
     setManualModalVisible(false);
     setManualTeams([]);
     setUnassignedPlayers([]);
+    setSessionDrawerExpanded(false);
   };
 
   const handleCancelManualTeams = () => {
@@ -246,12 +244,17 @@ export default function TeamsScreen() {
   };
 
   // Helper to get all players from other teams for swapping
-  const getOtherTeamPlayers = (excludeTeamId: string): Array<{ player: Player; teamId: string; teamName: string }> => {
-    const otherPlayers: Array<{ player: Player; teamId: string; teamName: string }> = [];
+  const getOtherTeamPlayers = (excludeTeamId: string): Array<{ player: Player; teamId: string; teamName: string; teamAvgSkill: string }> => {
+    const otherPlayers: Array<{ player: Player; teamId: string; teamName: string; teamAvgSkill: string }> = [];
     teams.forEach(team => {
       if (team.id !== excludeTeamId) {
         team.players.forEach(player => {
-          otherPlayers.push({ player, teamId: team.id, teamName: team.name });
+          otherPlayers.push({ 
+            player, 
+            teamId: team.id, 
+            teamName: team.name,
+            teamAvgSkill: getTeamAvgSkill(team)
+          });
         });
       }
     });
@@ -291,29 +294,9 @@ export default function TeamsScreen() {
     setSwapTargetPlayer(null);
   };
 
-  // Team Generation Handler
-  const handleGenerateTeams = () => {
-    switch (generationMode) {
-      case 'random':
-        handleRandomTeams();
-        break;
-      case 'balanced':
-        handleBalancedTeams();
-        break;
-      case 'manual':
-        handleManualTeams();
-        break;
-    }
-  };
 
-  const getGenerationModeLabel = () => {
-    switch (generationMode) {
-      case 'random': return 'Random';
-      case 'balanced': return 'Balanced';
-      case 'manual': return 'Manual';
-      default: return 'Balanced';
-    }
-  };
+
+
 
   // Settings handlers
   const handleSaveSettings = (newSettings: { weights: { skillLevel: number; teammatePreference: number; teamSizePreference: number }; darkMode: boolean }) => {
@@ -327,6 +310,24 @@ export default function TeamsScreen() {
       <View style={styles.titleRow}>
         <Text variant="headlineMedium" style={styles.screenTitle}>Teams</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          {/* Generation Icons */}
+          <IconButton
+            icon="dice-multiple"
+            size={24}
+            onPress={handleRandomTeams}
+            disabled={sessionPlayers.length === 0}
+            iconColor={sessionPlayers.length === 0 ? colors.onSurfaceDisabled : colors.secondary}
+            style={styles.titleButton}
+          />
+          <IconButton
+            icon="pencil"
+            size={24}
+            onPress={handleManualTeams}
+            disabled={sessionPlayers.length === 0}
+            iconColor={sessionPlayers.length === 0 ? colors.onSurfaceDisabled : colors.tertiary}
+            style={styles.titleButton}
+          />
+          
           {teams.length > 0 && (
             <IconButton
               icon="delete-sweep"
@@ -345,27 +346,19 @@ export default function TeamsScreen() {
         </View>
       </View>
       
-      {/* Team Generation Controls */}
-      <View style={styles.generationContainer}>
-        <TabSelector
-          options={generationOptions}
-          selectedKey={generationMode}
-          onSelect={(key) => setGenerationMode(key as 'random' | 'balanced' | 'manual')}
-          style={styles.tabSelector}
-        />
+      {/* Main Generate Button */}
+      <View style={styles.generateContainer}>
         <Button 
           mode="contained" 
           disabled={sessionPlayers.length === 0} 
           style={styles.generateButton} 
-          onPress={handleGenerateTeams}
+          onPress={handleBalancedTeams}
           buttonColor={colors.primary}
           textColor={colors.onPrimary}
         >
-          Generate Teams ({getGenerationModeLabel()})
+          Generate Teams
         </Button>
       </View>
-      
-
     </>
   );
 
@@ -379,31 +372,34 @@ export default function TeamsScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaView style={{ flex: 1 }} edges={['top','left','right']}>
-      <FlatList
-        data={teams}
-        keyExtractor={team => team.id}
-        renderItem={({ item: team }) => (
-          <TeamCard
+        {/* Fixed Header */}
+        <View style={styles.fixedHeader}>
+          {renderHeader()}
+        </View>
+        
+        {/* Scrollable Teams List */}
+        <FlatList
+          data={teams}
+          keyExtractor={team => team.id}
+          renderItem={({ item: team }) => (
+                      <TeamCard
             team={team}
             onEditTeamName={handleEditTeamName}
             onMovePlayer={handleSwapPlayer}
             onRemovePlayer={handleRemovePlayerFromTeam}
-            onDragEnd={data => setTeams(teams.map(t => t.id === team.id ? { ...t, players: data } : t))}
             getTeamAvgSkill={getTeamAvgSkill}
           />
-        )}
-        ListHeaderComponent={renderHeader}
-        ListFooterComponent={renderFooter}
-        ListEmptyComponent={<View style={styles.teamsContainer}><Text>Teams will appear here after generation.</Text></View>}
-        style={{ flex: 1 }}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ 
-          flexGrow: 1, 
-          paddingTop: 8, 
-          paddingHorizontal: SCREEN_MARGIN,
-          paddingBottom: sessionDrawerVisible ? 200 : 20 // Add space for drawer
-        }}
-      />
+          )}
+          ListEmptyComponent={<View style={styles.teamsContainer}><Text>Teams will appear here after generation.</Text></View>}
+          style={{ flex: 1 }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ 
+            flexGrow: 1, 
+            paddingTop: 8, 
+            paddingHorizontal: SCREEN_MARGIN,
+            paddingBottom: sessionDrawerVisible ? 200 : 20 // Add space for drawer
+          }}
+        />
       <Portal>
         <Modal visible={modalVisible} onDismiss={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); }} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -524,11 +520,11 @@ export default function TeamsScreen() {
                   No other players available to swap with
                 </Text>
               ) : (
-                getOtherTeamPlayers(swapPlayer?.fromTeamId || '').map(({ player, teamId, teamName }) => (
+                getOtherTeamPlayers(swapPlayer?.fromTeamId || '').map(({ player, teamId, teamName, teamAvgSkill }) => (
                   <List.Item
                     key={player.id}
                     title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
-                    description={`${teamName} Team`}
+                    description={`${teamName} Team • Avg Skill: ${teamAvgSkill}`}
                     left={props => (
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
@@ -576,38 +572,66 @@ export default function TeamsScreen() {
                 <Text style={{ fontStyle: 'italic', opacity: 0.6, marginBottom: 16 }}>All players are assigned to teams</Text>
               ) : (
                 <View style={[styles.unassignedContainer, { backgroundColor: colors.surface, padding: 12, marginBottom: 16 }, sharedStyles.cardBorderRadius]}>
-                  {/* Team number headers */}
-                  <View style={styles.teamHeaders}>
-                    <Text style={{ flex: 1, fontSize: 14, fontWeight: 'bold' }}>Player</Text>
-                    {manualTeams.map((team, index) => (
-                      <Text key={team.id} style={styles.teamHeaderText}>
-                        {index + 1}
-                      </Text>
-                    ))}
-                  </View>
-                  {unassignedPlayers.map(player => (
-                    <View key={player.id} style={styles.manualPlayerItem}>
-                      <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
-                      <Text 
-                        style={{ flex: 1 }} 
-                        numberOfLines={1} 
-                        ellipsizeMode="tail"
-                      >
-                        {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
-                      </Text>
-                      <View style={{ flexDirection: 'row' }}>
-                        {manualTeams.map((team, index) => (
-                          <IconButton
-                            key={team.id}
-                            icon="plus"
-                            size={16}
-                            onPress={() => handleAssignPlayerToTeam(player.id, team.id)}
-                            style={{ marginHorizontal: 2 }}
-                          />
+                  {/* Frozen column layout with horizontal scrolling */}
+                  <View style={styles.tableContainer}>
+                    {/* Fixed player name column */}
+                    <View style={styles.fixedColumn}>
+                      {/* Header */}
+                      <View style={[styles.teamHeaders, { borderRightWidth: 1, borderRightColor: '#e0e0e0' }]}>
+                        <Text style={{ width: 120, fontSize: 14, fontWeight: 'bold' }}>Player</Text>
+                      </View>
+                      {/* Player rows */}
+                      {unassignedPlayers.map(player => (
+                        <View key={player.id} style={[styles.tableRow, { borderRightWidth: 1, borderRightColor: '#e0e0e0' }]}>
+                          <View style={{ width: 120, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
+                            <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
+                            <Text 
+                              style={{ flex: 1 }} 
+                              numberOfLines={1} 
+                              ellipsizeMode="tail"
+                            >
+                              {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                    
+                    {/* Scrollable team columns */}
+                    <ScrollView 
+                      horizontal 
+                      showsHorizontalScrollIndicator={false}
+                      style={styles.scrollableColumns}
+                    >
+                      <View style={{ minWidth: Math.max(200, manualTeams.length * 50) }}>
+                        {/* Team headers */}
+                        <View style={styles.teamHeaders}>
+                          {manualTeams.map((team, index) => (
+                            <Text key={team.id} style={[styles.teamHeaderText, { width: 50 }]}>
+                              {index + 1}
+                            </Text>
+                          ))}
+                        </View>
+                        {/* Team buttons */}
+                        {unassignedPlayers.map(player => (
+                          <View key={player.id} style={styles.tableRow}>
+                            <View style={{ flexDirection: 'row' }}>
+                              {manualTeams.map((team, index) => (
+                                <View key={team.id} style={{ width: 50, alignItems: 'center' }}>
+                                  <IconButton
+                                    icon="plus"
+                                    size={16}
+                                    onPress={() => handleAssignPlayerToTeam(player.id, team.id)}
+                                    style={{ marginHorizontal: 2 }}
+                                  />
+                                </View>
+                              ))}
+                            </View>
+                          </View>
                         ))}
                       </View>
-                    </View>
-                  ))}
+                    </ScrollView>
+                  </View>
                 </View>
               )}
               
@@ -716,7 +740,7 @@ export default function TeamsScreen() {
                 showsVerticalScrollIndicator={false}
                 nestedScrollEnabled={true}
               >
-                <View style={styles.netsRow}>
+                <View style={[styles.netsRow, { backgroundColor: colors.surfaceVariant }]}>
                   <Text style={[styles.netsLabel, { color: colors.onSurface }]}>Nets for this session:</Text>
                   <IconButton icon="minus" size={20} onPress={() => setNumberOfNets(Math.max(1, numberOfNets - 1))} />
                   <Text style={[styles.netsValue, { color: colors.onSurface }]}>{numberOfNets}</Text>
@@ -740,7 +764,7 @@ export default function TeamsScreen() {
                     </Text>
                   ) : (
                     sessionPlayers.map(player => (
-                      <View key={player.id} style={styles.playerItem}>
+                      <View key={player.id} style={[styles.playerItem, { backgroundColor: colors.surfaceVariant }]}>
                         <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
                         <Text style={[styles.playerName, { color: colors.onSurface }]}>
                           {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}

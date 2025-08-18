@@ -182,42 +182,41 @@ export default function PlayersScreen() {
           </View>
         </View>
         
-        {/* Players Card */}
-        <Card style={[styles.playersCard, { backgroundColor: colors.background}, sharedStyles.cardBorderRadius]}>
-          <Card.Content style={[sharedStyles.cardBorderRadius]}>
-            <List.Section>
-              <ScrollView showsVerticalScrollIndicator={false}>
-                {players.length === 0 ? (
-                  <Text>No players saved yet.</Text>
-                ) : (
-                  players.map(player => {
-                    const teammate = player.teammatePreference ? players.find(p => p.id === player.teammatePreference) : undefined;
-                    return (
-                      <Swipeable
-                        ref={(ref) => { swipeableRefs.current[player.id] = ref; }}
-                        key={player.id}
-                        renderRightActions={() => (
-                          <View style={styles.swipeActions}>
-                            <IconButton icon="pencil" onPress={() => handleEditPlayer(player.id)} />
-                            <IconButton icon="delete" iconColor={colors.error} onPress={() => handleDeletePlayer(player.id)} />
-                          </View>
-                        )}
-                      >
-                        <PlayerListItem
-                          player={player}
-                          rightIcon="chevron-left"
-                          onRightIconPress={() => swipeableRefs.current[player.id]?.openRight()}
-                          showSkillLevel={true}
-                          teammatePreference={teammate}
-                        />
-                      </Swipeable>
-                    );
-                  })
-                )}
-              </ScrollView>
-            </List.Section>
-          </Card.Content>
-        </Card>
+        {/* Players List */}
+        <View style={styles.playersList}>
+          <ScrollView 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
+            {players.length === 0 ? (
+              <Text>No players saved yet.</Text>
+            ) : (
+              players.map(player => {
+                const teammate = player.teammatePreference ? players.find(p => p.id === player.teammatePreference) : undefined;
+                return (
+                  <Swipeable
+                    ref={(ref) => { swipeableRefs.current[player.id] = ref; }}
+                    key={player.id}
+                    renderRightActions={() => (
+                      <View style={styles.swipeActions}>
+                        <IconButton icon="pencil" onPress={() => handleEditPlayer(player.id)} />
+                        <IconButton icon="delete" iconColor={colors.error} onPress={() => handleDeletePlayer(player.id)} />
+                      </View>
+                    )}
+                  >
+                    <PlayerListItem
+                      player={player}
+                      rightIcon="chevron-left"
+                      onRightIconPress={() => swipeableRefs.current[player.id]?.openRight()}
+                      showSkillLevel={true}
+                      teammatePreference={teammate}
+                    />
+                  </Swipeable>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
         
         <Portal>
           <Modal visible={modalVisible} onDismiss={handlePlayerFormCancel} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 

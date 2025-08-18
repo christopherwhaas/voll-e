@@ -5,7 +5,7 @@ import { Platform, Dimensions } from 'react-native';
 import { useTheme } from 'react-native-paper';
 import TeamsScreen from '../screens/TeamsScreen';
 import PlayersScreen from '../screens/PlayersScreen';
-import TournamentScreen from '../screens/TournamentScreen';
+// import TournamentScreen from '../screens/TournamentScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -51,9 +51,10 @@ export default function MainNavigator() {
             iconName = focused ? 'account-group' : 'account-group-outline';
           } else if (route.name === 'Players') {
             iconName = focused ? 'account-multiple' : 'account-multiple-outline';
-          } else if (route.name === 'Tournaments') {
-            iconName = focused ? 'trophy' : 'trophy-outline';
           }
+          // } else if (route.name === 'Tournaments') {
+          //   iconName = focused ? 'trophy' : 'trophy-outline';
+          // }
           return (
             <MaterialCommunityIcons 
               name={iconName as any} 
@@ -78,13 +79,13 @@ export default function MainNavigator() {
           tabBarLabel: 'Players',
         }}
       />
-      <Tab.Screen 
+      {/* <Tab.Screen 
         name="Tournaments" 
         component={TournamentScreen}
         options={{
           tabBarLabel: 'Tournaments',
         }}
-      />
+      /> */}
     </Tab.Navigator>
   );
 } 

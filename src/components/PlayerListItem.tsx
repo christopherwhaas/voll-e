@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { IconButton, useTheme } from 'react-native-paper';
 import { Player, SkillLevel } from '../models/types';
 import { useAppState } from '../models/AppStateContext';
+import { skillLevelEmojis } from '../utils/constants';
 
 interface PlayerListItemProps {
   player: Player;
@@ -34,14 +35,17 @@ export default function PlayerListItem({
   const isDark = settings.darkMode;
   // Map skill levels to tag/category color keys (must be after colors is defined)
   const SKILL_LEVEL_COLOR_KEY = {
-    New: 'gray',
-    Beginner: 'blue',
-    Intermediate: 'green',
-    Advanced: 'orange',
-    Jules: 'purple',
+    New: (colors as any).teal,
+    Beginner: colors.primary,
+    Intermediate: colors.secondary,
+    Skilled: (colors as any).orange,
+    Advanced: colors.error,
+    Pro: (colors as any).purple,
+    Star: (colors as any).silver,
+    Legend: (colors as any).gold,
   } as const;
-  const skillColorKey = SKILL_LEVEL_COLOR_KEY[player.skillLevel] as keyof typeof colors;
-  const badgeTextColor = String(colors[skillColorKey] ?? colors.onSurfaceVariant);
+  const skillColorKey = SKILL_LEVEL_COLOR_KEY[player.skillLevel];
+  const badgeTextColor = String(skillColorKey ?? colors.onSurfaceVariant);
 
   // Helper for readable text color in light mode
   function getReadableTextColor(bg: string) {
@@ -81,11 +85,6 @@ export default function PlayerListItem({
           <Text style={[styles.name, { color: colors.onSurface }]} numberOfLines={1} ellipsizeMode="tail">
             {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
           </Text>
-          {showSkillLevel && (
-            <Text style={[styles.skillBadge, { backgroundColor: badgeBgColor, color: badgeText, borderColor: badgeText }]}> 
-              {player.skillLevel}
-            </Text>
-          )}
         </View>
         {teammatePreference && (
           <View style={styles.teammateBadge}>
@@ -95,6 +94,14 @@ export default function PlayerListItem({
           </View>
         )}
       </View>
+      {/* Skill Badge - Top Right */}
+      {showSkillLevel && (
+        <View>
+          <Text style={[styles.skillBadge, { backgroundColor: badgeBgColor, color: badgeText, borderColor: badgeText }]}> 
+            {skillLevelEmojis[player.skillLevel]} {player.skillLevel}
+          </Text>
+        </View>
+      )}
       {/* Right icon or actions */}
       {rightIcon && (
         <IconButton icon={rightIcon} iconColor={colors.onSurfaceVariant} onPress={onRightIconPress} style={styles.rightIcon} />
@@ -111,6 +118,7 @@ export default function PlayerListItem({
 
 const styles = StyleSheet.create({
   row: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 14,
@@ -149,13 +157,13 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   skillBadge: {
-    fontSize: 12,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
+    fontSize: 10,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
     overflow: 'hidden',
     borderWidth: 1,
+    textAlign: 'right',
   },
   teammateBadge: {
     flexDirection: 'row',

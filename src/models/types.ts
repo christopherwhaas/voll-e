@@ -1,8 +1,7 @@
 // Data models and constants for voll-e app
 
-export type SkillLevel = 'New' | 'Beginner' | 'Intermediate' | 'Advanced' | 'Jules';
+export type SkillLevel = 'New' | 'Beginner' | 'Intermediate' | 'Skilled' | 'Advanced' | 'Pro' | 'Star' | 'Legend';
 export type TeamSize = 'Small' | 'Large' | 'Any';
-export type Position = 'Hitter' | 'Setter' | 'Libero' | 'Blocker' | 'Any';
 
 export interface Player {
   id: string;
@@ -90,8 +89,11 @@ export const SKILL_VALUES: Record<SkillLevel, number> = {
   New: 0,
   Beginner: 1,
   Intermediate: 2,
-  Advanced: 3,
-  Jules: 4
+  Skilled: 3,
+  Advanced: 4,
+  Pro: 5,
+  Star: 6,
+  Legend: 7
 };
 
 export const COLOR_NAMES = [

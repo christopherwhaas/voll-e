@@ -4,12 +4,13 @@ export default StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+    paddingBottom: 0,
   },
   titleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 6,
   },
   screenTitle: {
     fontWeight: 'bold',
@@ -45,6 +46,6 @@ export default StyleSheet.create({
     marginBottom: 16,
   },
   playersList: {
-    flex: 1,
+    flex: 1
   },
 }); 

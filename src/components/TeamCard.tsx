@@ -37,7 +37,7 @@ export default function TeamCard({
         left={props => <List.Icon {...props} icon="circle" color={COLOR_MAP[team.name] || colors.primary} />}
         right={() => (
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.skillBadge, { backgroundColor: colors.elevation?.level1 || colors.surface, color: colors.onSurface }]}>Avg Skill: {getTeamAvgSkill(team)}</Text>
+            <Text style={[styles.skillBadge, { backgroundColor: colors.elevation?.level3 || colors.surface, color: colors.onSurface }]}>Avg Skill: {getTeamAvgSkill(team)}</Text>
           </View>
         )}
       />

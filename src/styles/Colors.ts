@@ -1,58 +1,54 @@
 export const CustomThemeColors = {
   light: {
     // General-Purpose UI
-    background: "#ECEFF1", // App Background
-    onBackground: "#1A202C", // Primary Text
-    surface: "#F7FAFC", // Surface / Panel
-    onSurface: "#1A202C", // Primary Text
-    surfaceVariant: "#EDF2F7", // Sidebar / Navigation
-    onSurfaceVariant: "#4A5568", // Secondary Text
+    background: "#FCFBFC", // App Background
+    onBackground: "#1C1D36", // Primary Text
+    surface: "#FFFFFF", // Surface / Panel
+    onSurface: "#1C1D36", // Primary Text
+    surfaceVariant: "#D3D3E2", // Sidebar / Navigation
+    onSurfaceVariant: "#1C1D36", // Secondary Text
     outline: "#CBD5E0", // Border / Divider
     outlineVariant: "#A0AEC0", // Muted / Tertiary Text
     shadow: "#000000",
     scrim: "#000000",
-    inverseSurface: "#1A202C",
-    inverseOnSurface: "#F7FAFC",
+    inverseSurface: "#1C1D36",
+    inverseOnSurface: "#FFFFFF",
     inversePrimary: "#2B6CB0",
     // Primary/Secondary/Tertiary
-    primary: "#2B6CB0", // Blue
-    onPrimary: "#ECEFF1",
-    primaryContainer: "#E2E8F0", // Hover Surface
-    onPrimaryContainer: "#1A202C",
-    secondary: "#38A169", // Green
-    onSecondary: "#ECEFF1",
+    primary: "#347AE4", // Blue
+    onPrimary: "#FFFFFF",
+    primaryContainer: "#C1D9F9", // Hover Surface
+    onPrimaryContainer: "#1C1D36",
+    secondary: "#76C03C", // Green
+    onSecondary: "#FFFFFF",
     secondaryContainer: "#C6F6D5",
     onSecondaryContainer: "#22543D",
-    tertiary: "#805AD5", // Purple
-    onTertiary: "#ECEFF1",
+    tertiary: "#5959DB", // Purple
+    onTertiary: "#FFFFFF",
     tertiaryContainer: "#E9D8FD",
     onTertiaryContainer: "#44337A",
     // Status
-    error: "#C53030",
-    onError: "#ECEFF1",
-    errorContainer: "#FC8181",
-    onErrorContainer: "#C53030",
-    success: "#2F855A",
-    onSuccess: "#ECEFF1",
-    warning: "#DD6B20",
-    onWarning: "#ECEFF1",
-    info: "#3182CE",
-    onInfo: "#ECEFF1",
+    error: "#DA6F7C",
+    onError: "#FFFFFF",
+    errorContainer: "#DA6F7C",
+    onErrorContainer: "#6B0505",
+    success: "#1CB17F",
+    onSuccess: "#FFFFFF",
+    warning: "#E9C254",
+    onWarning: "#FFFFFF",
+    info: "#5959DB",
+    onInfo: "#FFFFFF",
     // Tag/Category
-    blue: "#2B6CB0",
-    green: "#38A169",
-    red: "#E53E3E",
-    purple: "#805AD5",
+    blue: "#347AE4",
+    green: "#76C03C",
+    red: "#DA6F7C",
+    purple: "#5959DB",
     teal: "#319795",
-    orange: "#DD6B20",
+    orange: "#BC5F12",
     gray: "#CBD5E0",
     gold: "#FFD700",
     silver: "#C0C0C0",
-    // Data Visuals
-    primaryLine: "#2B6CB0",
-    secondaryLine: "#E46C2C",
-    areaFill: "rgba(49,130,206,0.15)",
-    pointHighlight: "#D69E2E",
+
     // Elevation
     elevation: {
       level0: "transparent",
@@ -68,58 +64,53 @@ export const CustomThemeColors = {
   },
   dark: {
     // General-Purpose UI
-    background: "#0B1B2B", // App Background
-    onBackground: "#ECEFF1", // Primary Text
-    surface: "#132238", // Surface / Panel
-    onSurface: "#ECEFF1", // Primary Text
-    surfaceVariant: "#0E1A29", // Sidebar / Navigation
+    background: "#17181F", // App Background
+    onBackground: "#FFFFFF", // Primary Text
+    surface: "#26272E", // Surface / Panel
+    onSurface: "#FFFFFF", // Primary Text
+    surfaceVariant: "#122236", // Sidebar / Navigation
     onSurfaceVariant: "#A0AEC0", // Secondary Text
     outline: "#2D3748", // Border / Divider
     outlineVariant: "#718096", // Muted / Tertiary Text
     shadow: "#000000",
     scrim: "#000000",
     inverseSurface: "#F7FAFC",
-    inverseOnSurface: "#1A202C",
-    inversePrimary: "#4299E1",
+    inverseOnSurface: "#1C1D36",
+    inversePrimary: "#347AE4",
     // Primary/Secondary/Tertiary
-    primary: "#4299E1", // Blue
-    onPrimary: "#0B1B2B",
-    primaryContainer: "#1C2C3E", // Hover Surface
-    onPrimaryContainer: "#ECEFF1",
-    secondary: "#68D391", // Green
-    onSecondary: "#0B1B2B",
+    primary: "#347AE4", // Blue
+    onPrimary: "#FFFFFF",
+    primaryContainer: "#0F3661", // Hover Surface
+    onPrimaryContainer: "#FFFFFF",
+    secondary: "#76C03C", // Green
+    onSecondary: "#17181F",
     secondaryContainer: "#22543D",
     onSecondaryContainer: "#C6F6D5",
-    tertiary: "#B794F4", // Purple
-    onTertiary: "#0B1B2B",
+    tertiary: "#5959DB", // Purple
+    onTertiary: "#17181F",
     tertiaryContainer: "#44337A",
     onTertiaryContainer: "#E9D8FD",
     // Status
-    error: "#E53E3E",
-    onError: "#ECEFF1",
-    errorContainer: "#FC8181",
-    onErrorContainer: "#E53E3E",
-    success: "#48BB78",
-    onSuccess: "#0B1B2B",
-    warning: "#ED8936",
-    onWarning: "#0B1B2B",
+    error: "#DA6F7C",
+    onError: "#FFFFFF",
+    errorContainer: "#DA6F7C",
+    onErrorContainer: "#6B0505",
+    success: "#1CB17F",
+    onSuccess: "#17181F",
+    warning: "#E9C254",
+    onWarning: "#17181F",
     info: "#63B3ED",
-    onInfo: "#0B1B2B",
+    onInfo: "#17181F",
     // Tag/Category
-    blue: "#4299E1",
-    green: "#68D391",
-    red: "#FC8181",
-    purple: "#B794F4",
-    teal: "#4FD1C5",
-    orange: "#F6AD55",
-    gray: "#A0AEC0",
+    blue: "#347AE4",
+    green: "#76C03C",
+    red: "#DA6F7C",
+    purple: "#5959DB",
+    teal: "#319795",
+    orange: "#BC5F12",
+    gray: "#CBD5E0",
     gold: "#FFD700",
     silver: "#C0C0C0",
-    // Data Visuals
-    primaryLine: "#00C896",
-    secondaryLine: "#FF763F",
-    areaFill: "rgba(0,255,159,0.2)",
-    pointHighlight: "#ECC94B",
     // Elevation
     elevation: {
       level0: "transparent",

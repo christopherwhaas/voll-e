@@ -34,7 +34,7 @@ export default function SessionPlayersCard({
   }, [isExpanded, setIsExpanded]);
 
   return (
-    <Card key="session-card" style={[styles.sessionCard, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
+    <Card key="session-card" style={[styles.sessionCard, { backgroundColor: colors.primary }, sharedStyles.cardBorderRadius]}>
       <TouchableOpacity onPress={toggleExpanded}>
         <Card.Title
           title={

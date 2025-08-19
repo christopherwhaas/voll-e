@@ -1,15 +1,16 @@
 import * as React from 'react';
 import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import { Text, Button, Portal, Modal, List, IconButton, Checkbox, Dialog, RadioButton, useTheme, Surface } from 'react-native-paper';
-import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import { useAppState } from '../models/AppStateContext';
-import { Player, COLOR_NAMES, SKILL_VALUES, Team } from '../models/types';
+import { Player, COLOR_NAMES, SKILL_VALUES, Team, COLOR_MAP } from '../models/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SCREEN_MARGIN, SORT_OPTIONS } from '../utils/constants';
+import { SCREEN_MARGIN, SORT_OPTIONS, skillLevelEmojis } from '../utils/constants';
 import { sharedStyles, screenHeight } from '../styles/shared';
 import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import TeamCard from '../components/TeamCard';
-import SettingsModal from '../components/SettingsModal';
+import SettingsDrawer from '../components/SettingsDrawer';
 import TabSelector from '../components/TabSelector';
 import { generateRandomTeams, generateSnakeDraftTeams } from '../utils/teamGeneration';
 import styles from '../styles/TeamsScreenStyles';
@@ -45,7 +46,7 @@ export default function TeamsScreen() {
   const [manualTeams, setManualTeams] = React.useState<Team[]>([]);
   const [unassignedPlayers, setUnassignedPlayers] = React.useState<Player[]>([]);
 
-  const [settingsModalVisible, setSettingsModalVisible] = React.useState(false);
+  const [settingsDrawerVisible, setSettingsDrawerVisible] = React.useState(false);
   // Modal mode: 'select' or 'add'
   const [modalMode, setModalMode] = React.useState<'select' | 'add'>('select');
   const { colors } = useTheme();
@@ -69,38 +70,33 @@ export default function TeamsScreen() {
     }
   }, [sessionPlayers.length, sessionDrawerVisible]);
 
-  // Gesture handler for drawer swipe
-  const onGestureEvent = React.useCallback((event: any) => {
-    const { translationY } = event.nativeEvent;
-    const maxTranslateY = drawerHeight - minDrawerHeight;
-    const newTranslateY = Math.max(0, Math.min(maxTranslateY, translationY));
-    setDrawerTranslateY(newTranslateY);
-  }, [drawerHeight, minDrawerHeight]);
-
-  // Handle swipe up to expand when collapsed
-  const onGestureEventUp = React.useCallback((event: any) => {
-    const { translationY } = event.nativeEvent;
-    if (translationY < 0 && !sessionDrawerExpanded) {
-      // Swiping up when collapsed - expand the drawer
-      setSessionDrawerExpanded(true);
-      setDrawerTranslateY(0);
-    }
-  }, [sessionDrawerExpanded]);
-
-  const onHandlerStateChange = React.useCallback((event: any) => {
-    const { state, translationY } = event.nativeEvent;
-    
-    if (state === State.END) {
-      const threshold = (drawerHeight - minDrawerHeight) / 2;
-      const shouldCollapse = translationY > threshold;
-      
-      if (shouldCollapse) {
-        setSessionDrawerExpanded(false);
-      } else {
-        setSessionDrawerExpanded(true);
-      }
-      setDrawerTranslateY(0);
-    }
+  // Modern gesture handler for drawer swipe
+  const panGesture = React.useMemo(() => {
+    return Gesture.Pan()
+      .onUpdate((event) => {
+        'worklet';
+        const { translationY } = event;
+        if (drawerHeight > 0 && minDrawerHeight > 0) {
+          const maxTranslateY = drawerHeight - minDrawerHeight;
+          const newTranslateY = Math.max(0, Math.min(maxTranslateY, translationY));
+          runOnJS(setDrawerTranslateY)(newTranslateY);
+        }
+      })
+      .onEnd((event) => {
+        'worklet';
+        const { translationY } = event;
+        if (drawerHeight > 0 && minDrawerHeight > 0) {
+          const threshold = (drawerHeight - minDrawerHeight) / 2;
+          const shouldCollapse = translationY > threshold;
+          
+          if (shouldCollapse) {
+            runOnJS(setSessionDrawerExpanded)(false);
+          } else {
+            runOnJS(setSessionDrawerExpanded)(true);
+          }
+        }
+        runOnJS(setDrawerTranslateY)(0);
+      });
   }, [drawerHeight, minDrawerHeight]);
 
 
@@ -114,7 +110,7 @@ export default function TeamsScreen() {
 
   // Balanced Team Generation
   const handleBalancedTeams = () => {
-    const weights = settings.weights ?? {skillLevel: 3, teammatePreference: 2, teamSizePreference: 1};
+    const weights = settings.weights ?? {skillLevel: 5, teammatePreference: 0, teamSizePreference: 0};
     const teamsArr = generateSnakeDraftTeams(
       players.filter(p => sessionPlayerIds.includes(p.id)),
       { numberOfNets, weights },
@@ -303,46 +299,55 @@ export default function TeamsScreen() {
     setSettings(newSettings);
   };
 
-  // Header: nets control and session player list
+  // Header: modern and minimal design
   const renderHeader = () => (
     <>
-      {/* Title and Settings Row */}
+      {/* Title and Action Buttons Row */}
       <View style={styles.titleRow}>
         <Text variant="headlineMedium" style={styles.screenTitle}>Teams</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          {/* Generation Icons */}
-          <IconButton
-            icon="dice-multiple"
-            size={24}
-            onPress={handleRandomTeams}
-            disabled={sessionPlayers.length === 0}
-            iconColor={sessionPlayers.length === 0 ? colors.onSurfaceDisabled : colors.secondary}
-            style={styles.titleButton}
-          />
-          <IconButton
-            icon="pencil"
-            size={24}
-            onPress={handleManualTeams}
-            disabled={sessionPlayers.length === 0}
-            iconColor={sessionPlayers.length === 0 ? colors.onSurfaceDisabled : colors.tertiary}
-            style={styles.titleButton}
-          />
-          
-          {teams.length > 0 && (
+        <View style={styles.actionButtonsContainer}>
+          {/* Quick Actions */}
+          <View style={styles.quickActionsContainer}>
             <IconButton
-              icon="delete-sweep"
-              size={24}
-              onPress={handleClearTeams}
-              iconColor={colors.error}
-              style={styles.settingsButton}
+              icon="dice-multiple"
+              size={20}
+              onPress={handleRandomTeams}
+              disabled={sessionPlayers.length === 0}
+              iconColor={sessionPlayers.length === 0 ? colors.onSurfaceDisabled : colors.secondary}
+              style={styles.modernIconButton}
+              rippleColor="transparent"
             />
-          )}
-          <IconButton
-            icon="cog"
-            size={24}
-            onPress={() => setSettingsModalVisible(true)}
-            style={styles.settingsButton}
-          />
+            <IconButton
+              icon="pencil"
+              size={20}
+              onPress={handleManualTeams}
+              disabled={sessionPlayers.length === 0}
+              iconColor={sessionPlayers.length === 0 ? colors.onSurfaceDisabled : colors.tertiary}
+              style={styles.modernIconButton}
+              rippleColor="transparent"
+            />
+          </View>
+          
+          {/* Settings and Clear */}
+          <View style={styles.settingsContainer}>
+            {teams.length > 0 && (
+              <IconButton
+                icon="delete-sweep"
+                size={20}
+                onPress={handleClearTeams}
+                iconColor={colors.error}
+                style={styles.modernIconButton}
+                rippleColor="transparent"
+              />
+            )}
+            <IconButton
+              icon="cog"
+              size={20}
+              onPress={() => setSettingsDrawerVisible(true)}
+              style={styles.modernIconButton}
+              rippleColor="transparent"
+            />
+          </View>
         </View>
       </View>
       
@@ -425,7 +430,7 @@ export default function TeamsScreen() {
                     style={[{ marginBottom: 16 }, sharedStyles.cardBorderRadius]} 
                     onPress={handleAddSelected} 
                     disabled={selectedIds.length === 0} 
-                    textColor={colors.primary}
+                    textColor={colors.secondary}
                   >
                     Add to Session ({selectedIds.length})
                   </Button>
@@ -459,13 +464,13 @@ export default function TeamsScreen() {
                         key={player.id}
                         title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
                         left={props => (
-                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={{ fontSize: 24, marginRight: 8 }}>{player.emoji || '👤'}</Text>
-                            <Checkbox
-                              status={selectedIds.includes(player.id) ? 'checked' : 'unchecked'}
-                              onPress={() => handleToggleSelect(player.id)}
-                            />
-                          </View>
+                          <Text style={{ fontSize: 24, marginLeft: 8 }}>{player.emoji || '👤'}</Text>
+                        )}
+                        right={props => (
+                          <Checkbox
+                            status={selectedIds.includes(player.id) ? 'checked' : 'unchecked'}
+                            onPress={() => handleToggleSelect(player.id)}
+                          />
                         )}
                         onPress={() => handleToggleSelect(player.id)}
                       />
@@ -500,18 +505,30 @@ export default function TeamsScreen() {
             {swapTargetPlayer && (
               <View style={{ 
                 backgroundColor: colors.primaryContainer, 
-                padding: 12, 
-                borderRadius: 8, 
+                padding: 16, 
+                borderRadius: 12, 
                 marginBottom: 16,
                 borderLeftWidth: 4,
                 borderLeftColor: colors.primary
               }}>
-                <Text style={{ color: colors.onBackground, fontWeight: 'bold', marginBottom: 4 }}>
+                <Text style={{ color: colors.onBackground, fontWeight: 'bold', marginBottom: 8 }}>
                   Swap Preview:
                 </Text>
-                <Text style={{ color: colors.onBackground }}>
-                  {swapPlayer?.player.firstName}{swapPlayer?.player.lastName ? ` ${swapPlayer.player.lastName}` : ''} ↔ {swapTargetPlayer.player.firstName}{swapTargetPlayer.player.lastName ? ` ${swapTargetPlayer.player.lastName}` : ''}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 20, marginRight: 8 }}>{swapPlayer?.player.emoji || '👤'}</Text>
+                    <Text style={{ color: colors.onBackground, fontWeight: '500' }}>
+                      {swapPlayer?.player.firstName}{swapPlayer?.player.lastName ? ` ${swapPlayer.player.lastName}` : ''}
+                    </Text>
+                  </View>
+                  <Text style={{ color: colors.onSurfaceVariant, fontSize: 20 }}>↔</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 20, marginRight: 8 }}>{swapTargetPlayer.player.emoji || '👤'}</Text>
+                    <Text style={{ color: colors.onBackground, fontWeight: '500' }}>
+                      {swapTargetPlayer.player.firstName}{swapTargetPlayer.player.lastName ? ` ${swapTargetPlayer.player.lastName}` : ''}
+                    </Text>
+                  </View>
+                </View>
               </View>
             )}
             <ScrollView style={{ maxHeight: 300 }}>
@@ -521,13 +538,38 @@ export default function TeamsScreen() {
                 </Text>
               ) : (
                 getOtherTeamPlayers(swapPlayer?.fromTeamId || '').map(({ player, teamId, teamName, teamAvgSkill }) => (
-                  <List.Item
+                  <TouchableOpacity
                     key={player.id}
-                    title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
-                    description={`${teamName} Team • Avg Skill: ${teamAvgSkill}`}
-                    left={props => (
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
+                    onPress={() => setSwapTargetPlayer({ player, teamId })}
+                    style={[
+                      styles.modernSwapItem,
+                      { 
+                        backgroundColor: swapTargetPlayer?.player.id === player.id ? colors.primaryContainer : colors.surface,
+                        borderColor: swapTargetPlayer?.player.id === player.id ? colors.primary : colors.outline
+                      }
+                    ]}
+                  >
+                    <View style={styles.swapItemHeader}>
+                      <View style={styles.swapItemLeft}>
+                        <Text style={{ fontSize: 24, marginRight: 12 }}>{player.emoji || '👤'}</Text>
+                        <View style={styles.swapItemInfo}>
+                          <Text style={[styles.swapItemName, { color: colors.onBackground }]}>
+                            {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
+                          </Text>
+                                                     <View style={styles.swapItemDetails}>
+                             <View style={[styles.teamBadge, { backgroundColor: COLOR_MAP[teamName] || colors.outline }]}>
+                               <Text style={[styles.teamBadgeText, { color: colors.onPrimary }]}>{teamName}</Text>
+                             </View>
+                             <Text style={[styles.skillText, { color: colors.onSurfaceVariant }]}>
+                               Team Avg: {teamAvgSkill}
+                             </Text>
+                           </View>
+                         </View>
+                       </View>
+                       <View style={styles.swapItemRight}>
+                         <Text style={[styles.avgSkillText, { color: colors.onSurfaceVariant }]}>
+                           {skillLevelEmojis[player.skillLevel]} {player.skillLevel}
+                         </Text>
                         <RadioButton
                           value={player.id}
                           status={swapTargetPlayer?.player.id === player.id ? 'checked' : 'unchecked'}
@@ -535,10 +577,8 @@ export default function TeamsScreen() {
                           color={colors.primary}
                         />
                       </View>
-                    )}
-                    onPress={() => setSwapTargetPlayer({ player, teamId })}
-                    style={{ backgroundColor: swapTargetPlayer?.player.id === player.id ? colors.primaryContainer : 'transparent' }}
-                  />
+                    </View>
+                  </TouchableOpacity>
                 ))
               )}
             </ScrollView>
@@ -577,12 +617,12 @@ export default function TeamsScreen() {
                     {/* Fixed player name column */}
                     <View style={styles.fixedColumn}>
                       {/* Header */}
-                      <View style={[styles.teamHeaders, { borderRightWidth: 1, borderRightColor: '#e0e0e0' }]}>
+                      <View style={[styles.teamHeaders, { borderRightWidth: 1, borderRightColor: colors.outline, borderBottomColor: colors.outline }]}>
                         <Text style={{ width: 120, fontSize: 14, fontWeight: 'bold' }}>Player</Text>
                       </View>
                       {/* Player rows */}
                       {unassignedPlayers.map(player => (
-                        <View key={player.id} style={[styles.tableRow, { borderRightWidth: 1, borderRightColor: '#e0e0e0' }]}>
+                        <View key={player.id} style={[styles.tableRow, { borderRightWidth: 1, borderRightColor: colors.outline }]}>
                           <View style={{ width: 120, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8 }}>
                             <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
                             <Text 
@@ -675,9 +715,9 @@ export default function TeamsScreen() {
             </ScrollView>
           </KeyboardAvoidingView>
         </Modal>
-        <SettingsModal
-          visible={settingsModalVisible}
-          onDismiss={() => setSettingsModalVisible(false)}
+        <SettingsDrawer
+          visible={settingsDrawerVisible}
+          onDismiss={() => setSettingsDrawerVisible(false)}
           onSave={handleSaveSettings}
           settings={{
             weights: settings.weights ?? {
@@ -692,18 +732,12 @@ export default function TeamsScreen() {
       
       {/* Session Drawer */}
       {sessionDrawerVisible && (
-        <PanGestureHandler
-          onGestureEvent={(event) => {
-            onGestureEvent(event);
-            onGestureEventUp(event);
-          }}
-          onHandlerStateChange={onHandlerStateChange}
-        >
+        <GestureDetector gesture={panGesture}>
           <Surface 
             style={[
               styles.sessionDrawer, 
               { 
-                backgroundColor: colors.surface,
+                backgroundColor: colors.primary,
                 transform: [{ translateY: drawerTranslateY }]
               }
             ]}
@@ -717,18 +751,20 @@ export default function TeamsScreen() {
               <View style={[styles.drawerTabHandle, { backgroundColor: colors.onSurfaceVariant }]} />
             </View>
             
-            <View 
-              style={styles.drawerHeader}
-              onLayout={(event: any) => {
-                const { height } = event.nativeEvent.layout;
-                setMinDrawerHeight(height);
-              }}
-            >
+                          <View 
+                style={[styles.drawerHeader]}
+                onLayout={(event: any) => {
+                  const { height } = event.nativeEvent.layout;
+                  setMinDrawerHeight(height);
+                }}
+              >
               <View style={styles.drawerTitleContainer}>
-                <Text variant="titleMedium" style={[styles.drawerTitle, { color: colors.onSurface }]}>
-                  Current Session
-                </Text>
-                <Text style={[styles.drawerSubtitle, { color: colors.onSurfaceVariant }]}>
+                {sessionPlayers.length === 0 && (
+                  <Text variant="titleMedium" style={[styles.drawerTitle, { color: colors.onPrimary }]}>
+                    Current Session
+                  </Text>
+                )}
+                <Text style={[styles.drawerSubtitle, { color: colors.onPrimary }]}>
                   {sessionPlayers.length} player{sessionPlayers.length !== 1 ? 's' : ''} • {numberOfNets} net{numberOfNets !== 1 ? 's' : ''}
                 </Text>
               </View>
@@ -740,33 +776,34 @@ export default function TeamsScreen() {
                 showsVerticalScrollIndicator={false}
                 nestedScrollEnabled={true}
               >
-                <View style={[styles.netsRow, { backgroundColor: colors.surfaceVariant }]}>
-                  <Text style={[styles.netsLabel, { color: colors.onSurface }]}>Nets for this session:</Text>
+                <View style={[styles.netsRow, { backgroundColor: colors.primaryContainer }]}>
+                  <Text style={[styles.netsLabel, { color: colors.onPrimaryContainer }]}>Nets for this session:</Text>
                   <IconButton icon="minus" size={20} onPress={() => setNumberOfNets(Math.max(1, numberOfNets - 1))} />
-                  <Text style={[styles.netsValue, { color: colors.onSurface }]}>{numberOfNets}</Text>
+                  <Text style={[styles.netsValue, { color: colors.onPrimaryContainer }]}>{numberOfNets}</Text>
                   <IconButton icon="plus" size={20} onPress={() => setNumberOfNets(numberOfNets + 1)} />
                 </View>
                 
                 <View style={styles.playersSection}>
                   <View style={styles.playersHeader}>
-                    <Text style={[styles.playersTitle, { color: colors.onSurface }]}>Session Players</Text>
+                    <Text style={[styles.playersTitle, { color: colors.onPrimary }]}>Session Players</Text>
                     <IconButton
                       icon="plus"
                       size={24}
                       onPress={() => setModalVisible(true)}
                       style={styles.addButton}
+                      iconColor={colors.onPrimary}
                     />
                   </View>
                   
                   {sessionPlayers.length === 0 ? (
-                    <Text style={[styles.emptyText, { color: colors.onSurfaceVariant }]}>
+                    <Text style={[styles.emptyText, { color: colors.onPrimary }]}>
                       No players selected for this session.
                     </Text>
                   ) : (
                     sessionPlayers.map(player => (
-                      <View key={player.id} style={[styles.playerItem, { backgroundColor: colors.surfaceVariant }]}>
+                      <View key={player.id} style={[styles.playerItem, { backgroundColor: colors.primaryContainer }]}>
                         <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
-                        <Text style={[styles.playerName, { color: colors.onSurface }]}>
+                        <Text style={[styles.playerName, { color: colors.onPrimaryContainer }]}>
                           {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
                         </Text>
                         <IconButton
@@ -782,7 +819,7 @@ export default function TeamsScreen() {
               </ScrollView>
             )}
           </Surface>
-        </PanGestureHandler>
+        </GestureDetector>
       )}
     </SafeAreaView>
     </GestureHandlerRootView>

@@ -8,24 +8,12 @@ import { SkillLevel, TeamSize, EMOJI_LIST } from '../models/types';
 import { useAppState } from '../models/AppStateContext';
 import { sharedStyles, screenHeight } from '../styles/shared';
 import TabSelector from './TabSelector';
+import SkillLevelSlider from './SkillLevelSlider';
+import { skillLevels, skillLevelEmojis } from '../utils/constants';
 
-const skillLevels: SkillLevel[] = ['New', 'Beginner', 'Intermediate', 'Advanced', 'Jules'];
 const teamSizes: TeamSize[] = ['Any', 'Small', 'Large'];
 
-// Emoji mapping for skill levels
-const skillLevelEmojis: Record<SkillLevel, string> = {
-  'New': '👶',
-  'Beginner': '🌱',
-  'Intermediate': '👌',
-  'Advanced': '🔥',
-  'Jules': '👑'
-};
-
-// Tab options for skill level and team size
-const skillLevelOptions = skillLevels.map(level => ({ 
-  key: level, 
-  label: skillLevelEmojis[level] 
-}));
+// Tab options for team size
 const teamSizeOptions = teamSizes.map(size => ({ key: size, label: size }));
 
 const schema = yup.object({
@@ -54,9 +42,11 @@ interface PlayerFormProps {
   submitLabel?: string;
   onImport?: () => void;
   showImportButton?: boolean;
+  hideHeader?: boolean;
+  fullHeight?: boolean;
 }
 
-export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player', onImport, showImportButton = false }: PlayerFormProps) {
+export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player', onImport, showImportButton = false, hideHeader = false, fullHeight = false }: PlayerFormProps) {
   const { colors } = useTheme();
   const { players } = useAppState();
   const { control, handleSubmit, reset, setValue, watch } = useForm<PlayerFormValues>({
@@ -88,32 +78,34 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
   const [teammateMenuWidth, setTeammateMenuWidth] = React.useState(0);
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={fullHeight ? { flex: 1 } : undefined}>
       <ScrollView 
         contentContainerStyle={[{ flexGrow: 1 }, sharedStyles.modalContentStyle]} 
         keyboardShouldPersistTaps="handled" 
         showsVerticalScrollIndicator={false}
-        style={sharedStyles.modalScrollView}
+        style={fullHeight ? { flex: 1 } : sharedStyles.modalScrollView}
       >
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-          <View style={sharedStyles.modalHeader}>
-            <Text variant="titleLarge" style={{
-              ...sharedStyles.modalTitle,
-              color: colors.onBackground
-            }}>{title}</Text>
-            {showImportButton && onImport && (
-              <Button
-                mode="outlined"
-                icon="account-multiple-plus"
-                onPress={onImport}
-                style={{ marginLeft: 8 }}
-                textColor={colors.primary}
-                buttonColor="transparent"
-              >
-                Bulk Import
-              </Button>
-            )}
-          </View>
+          {!hideHeader && (
+            <View style={sharedStyles.modalHeader}>
+              <Text variant="titleLarge" style={{
+                ...sharedStyles.modalTitle,
+                color: colors.onBackground
+              }}>{title}</Text>
+              {showImportButton && onImport && (
+                <Button
+                  mode="outlined"
+                  icon="account-multiple-plus"
+                  onPress={onImport}
+                  style={{ marginLeft: 8 }}
+                  textColor={colors.primary}
+                  buttonColor="transparent"
+                >
+                  Bulk Import
+                </Button>
+              )}
+            </View>
+          )}
           <Controller
             control={control}
             name="firstName"
@@ -141,17 +133,16 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
               />
             )}
           />
-          {/* Skill Level Tab Selector */}
+          {/* Skill Level Slider */}
           <Controller
             control={control}
             name="skillLevel"
             render={({ field: { onChange, value } }) => (
               <List.Section>
                 <List.Subheader>Skill Level</List.Subheader>
-                <TabSelector
-                  options={skillLevelOptions}
-                  selectedKey={value}
-                  onSelect={onChange}
+                <SkillLevelSlider
+                  value={value}
+                  onValueChange={onChange}
                   style={styles.tabSelector}
                 />
               </List.Section>

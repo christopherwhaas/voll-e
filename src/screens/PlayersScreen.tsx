@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { View, ScrollView, Dimensions, Alert, Clipboard, Share } from 'react-native';
+import { View, ScrollView, Dimensions, Alert, Clipboard, Share, Platform } from 'react-native';
 import { Text, List, FAB, Portal, Modal, IconButton, useTheme, Card, Button, TextInput } from 'react-native-paper';
 import { useAppState } from '../models/AppStateContext';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
+import PlayerFormDrawer from '../components/PlayerFormDrawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlayerListItem from '../components/PlayerListItem';
 import styles from '../styles/PlayersScreenStyles';
@@ -20,7 +21,6 @@ export default function PlayersScreen() {
   const [importError, setImportError] = React.useState('');
   const swipeableRefs = React.useRef<{ [key: string]: any }>({});
   const { height: screenHeight } = Dimensions.get('window');
-
   const { colors } = useTheme();
 
   const handlePlayerFormSubmit = (data: PlayerFormValues) => {
@@ -159,7 +159,7 @@ export default function PlayersScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} edges={['top','left','right']}>
       <View style={styles.container}>
         {/* Title */}
         <View style={styles.titleContainer}>
@@ -183,10 +183,10 @@ export default function PlayersScreen() {
         </View>
         
         {/* Players List */}
-        <View style={styles.playersList}>
+        <View style={[styles.playersList, { flex: 1 }]}>
           <ScrollView 
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            style={{ flex: 1 }}
           >
             {players.length === 0 ? (
               <Text>No players saved yet.</Text>
@@ -219,26 +219,17 @@ export default function PlayersScreen() {
         </View>
         
         <Portal>
-          <Modal visible={modalVisible} onDismiss={handlePlayerFormCancel} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 
-            <View style={sharedStyles.modalHeader}>
-              <View style={{ flex: 1 }} />
-              <IconButton
-                icon="close"
-                size={24}
-                onPress={handlePlayerFormCancel}
-                style={sharedStyles.closeButton}
-              />
-            </View>
-            <PlayerForm
-              initialValues={editPlayerId ? players.find(p => p.id === editPlayerId) : undefined}
-              onSubmit={handlePlayerFormSubmit}
-              onCancel={handlePlayerFormCancel}
-              title={editPlayerId ? 'Edit Player' : 'Add Player'}
-              submitLabel={editPlayerId ? 'Save Changes' : 'Add Player'}
-              onImport={handleImportPlayers}
-              showImportButton={!editPlayerId}
-            />
-          </Modal>
+          <PlayerFormDrawer
+            visible={modalVisible}
+            onDismiss={handlePlayerFormCancel}
+            initialValues={editPlayerId ? players.find(p => p.id === editPlayerId) : undefined}
+            onSubmit={handlePlayerFormSubmit}
+            onCancel={handlePlayerFormCancel}
+            title={editPlayerId ? 'Edit Player' : 'Add Player'}
+            submitLabel={editPlayerId ? 'Save Changes' : 'Add Player'}
+            onImport={handleImportPlayers}
+            showImportButton={!editPlayerId}
+          />
 
           {/* Import Modal */}
           <Modal visible={importModalVisible} onDismiss={handleImportCancel} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>

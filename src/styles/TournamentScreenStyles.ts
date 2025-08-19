@@ -54,7 +54,6 @@ export default StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   
   winnerTitle: {
@@ -73,7 +72,6 @@ export default StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   
   actionButton: {
@@ -224,7 +222,6 @@ export default StyleSheet.create({
     marginTop: 4,
     paddingTop: 4,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   
   bracketWinnerText: {
@@ -308,7 +305,6 @@ export default StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   
   winnerText: {
@@ -434,7 +430,6 @@ export default StyleSheet.create({
   compactTeam: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f7fafc',
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -501,7 +496,6 @@ export default StyleSheet.create({
     fontSize: 11,
     textAlign: 'center',
     marginTop: 2,
-    color: '#888',
   },
   compactTeamVertical: {
     flexDirection: 'column',
@@ -539,7 +533,7 @@ export default StyleSheet.create({
     paddingVertical: 8,
     minWidth: 90,
     marginHorizontal: 2,
-    backgroundColor: '#f7fafc',
+    // backgroundColor will be set dynamically
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },

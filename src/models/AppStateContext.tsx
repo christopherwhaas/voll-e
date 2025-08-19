@@ -75,7 +75,6 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (settings && !isLoading) {
-      console.log('Saving settings to AsyncStorage:', settings);
       AsyncStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
     }
   }, [settings, isLoading]);

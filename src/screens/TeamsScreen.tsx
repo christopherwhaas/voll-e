@@ -227,7 +227,6 @@ export default function TeamsScreen() {
   };
 
   const handleClearTeams = () => {
-    console.log('Clearing teams...');
     setTeams([]);
   };
 
@@ -517,16 +516,26 @@ export default function TeamsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 20, marginRight: 8 }}>{swapPlayer?.player.emoji || '👤'}</Text>
-                    <Text style={{ color: colors.onBackground, fontWeight: '500' }}>
-                      {swapPlayer?.player.firstName}{swapPlayer?.player.lastName ? ` ${swapPlayer.player.lastName}` : ''}
-                    </Text>
+                    <View>
+                      <Text style={{ color: colors.onBackground, fontWeight: '500' }}>
+                        {swapPlayer?.player.firstName}{swapPlayer?.player.lastName ? ` ${swapPlayer.player.lastName}` : ''}
+                      </Text>
+                      <Text style={{ color: colors.onSurfaceVariant, fontSize: 12 }}>
+                        {skillLevelEmojis[swapPlayer?.player.skillLevel || 'New']} {swapPlayer?.player.skillLevel}
+                      </Text>
+                    </View>
                   </View>
                   <Text style={{ color: colors.onSurfaceVariant, fontSize: 20 }}>↔</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 20, marginRight: 8 }}>{swapTargetPlayer.player.emoji || '👤'}</Text>
-                    <Text style={{ color: colors.onBackground, fontWeight: '500' }}>
-                      {swapTargetPlayer.player.firstName}{swapTargetPlayer.player.lastName ? ` ${swapTargetPlayer.player.lastName}` : ''}
-                    </Text>
+                    <View>
+                      <Text style={{ color: colors.onBackground, fontWeight: '500' }}>
+                        {swapTargetPlayer.player.firstName}{swapTargetPlayer.player.lastName ? ` ${swapTargetPlayer.player.lastName}` : ''}
+                      </Text>
+                      <Text style={{ color: colors.onSurfaceVariant, fontSize: 12 }}>
+                        {skillLevelEmojis[swapTargetPlayer.player.skillLevel]} {swapTargetPlayer.player.skillLevel}
+                      </Text>
+                    </View>
                   </View>
                 </View>
               </View>

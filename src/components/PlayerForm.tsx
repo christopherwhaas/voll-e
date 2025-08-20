@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { View, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
-import { Text, Button, TextInput, List, useTheme, Menu, IconButton } from 'react-native-paper';
+import { Text, Button, TextInput, List, useTheme, Menu, IconButton, Checkbox } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { SkillLevel, TeamSize, EMOJI_LIST } from '../models/types';
+import { SkillLevel, TeamSize, EMOJI_LIST, Group } from '../models/types';
 import { useAppState } from '../models/AppStateContext';
 import { sharedStyles, screenHeight } from '../styles/shared';
 import TabSelector from './TabSelector';
@@ -18,7 +18,7 @@ const teamSizeOptions = teamSizes.map(size => ({ key: size, label: size }));
 
 const schema = yup.object({
   firstName: yup.string().required('First name is required'),
-  lastName: yup.string().nullable(),
+  lastName: yup.string().optional().nullable(),
   skillLevel: yup.mixed<SkillLevel>().oneOf(skillLevels).required(),
   teamSizePreference: yup.mixed<TeamSize>().oneOf(teamSizes).required(),
   emoji: yup.string().oneOf(EMOJI_LIST).required(),
@@ -48,7 +48,7 @@ interface PlayerFormProps {
 
 export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player', onImport, showImportButton = false, hideHeader = false, fullHeight = false }: PlayerFormProps) {
   const { colors } = useTheme();
-  const { players } = useAppState();
+  const { players, groups } = useAppState();
   const { control, handleSubmit, reset, setValue, watch } = useForm<PlayerFormValues>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -236,6 +236,7 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
               </List.Section>
             )}
           />
+          
           <Button mode="contained" style={[{ marginTop: 12 }, sharedStyles.cardBorderRadius]} onPress={handleSubmit(onSubmit)} buttonColor={colors.primary} textColor={colors.onPrimary}>
             {submitLabel}
           </Button>

@@ -48,4 +48,20 @@ export default StyleSheet.create({
   playersList: {
     flex: 1
   },
+  groupManagementItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    marginBottom: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  groupManagementInfo: {
+    flex: 1,
+  },
+  groupManagementActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 }); 

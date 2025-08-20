@@ -3,6 +3,12 @@
 export type SkillLevel = 'New' | 'Beginner' | 'Intermediate' | 'Skilled' | 'Advanced' | 'Pro' | 'Star' | 'Legend';
 export type TeamSize = 'Small' | 'Large' | 'Any';
 
+export interface Group {
+  id: string;
+  name: string;
+  playerIds: string[];
+}
+
 export interface Player {
   id: string;
   firstName: string;
@@ -36,6 +42,7 @@ export interface AppState {
   settings: Settings;
   numberOfNets: number;
   sessionPlayerIds: string[]; // IDs of players selected for this session
+  groups: Group[];
 }
 
 // Tournament Types - TEMPORARILY DISABLED
@@ -116,6 +123,7 @@ export const COLOR_MAP: Record<string, string> = {
 export const STORAGE_KEYS = {
   PLAYERS: '@volleyteam_players',
   SETTINGS: '@volleyteam_settings',
+  GROUPS: '@volleyteam_groups',
   // TOURNAMENTS: '@volleyteam_tournaments',
 };
 

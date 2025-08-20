@@ -12,6 +12,7 @@ import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import TeamCard from '../components/TeamCard';
 import SettingsDrawer from '../components/SettingsDrawer';
 import TabSelector from '../components/TabSelector';
+import GroupSelector from '../components/GroupSelector';
 import { generateRandomTeams, generateSnakeDraftTeams } from '../utils/teamGeneration';
 import styles from '../styles/TeamsScreenStyles';
 
@@ -31,7 +32,7 @@ function getRandomColorNames(numTeams: number): string[] {
 }
 
 export default function TeamsScreen() {
-  const { players, sessionPlayerIds, setSessionPlayerIds, teams, setTeams, setPlayers, numberOfNets, setNumberOfNets, settings, setSettings } = useAppState();
+  const { players, sessionPlayerIds, setSessionPlayerIds, teams, setTeams, setPlayers, numberOfNets, setNumberOfNets, settings, setSettings, groups, getAllGroups } = useAppState();
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [swapDialogVisible, setSwapDialogVisible] = React.useState(false);
@@ -52,11 +53,29 @@ export default function TeamsScreen() {
   const { colors } = useTheme();
   const swipeableRefs = React.useRef<{ [key: string]: any }>({});
   const [newPlayerModalVisible, setNewPlayerModalVisible] = React.useState(false);
+  const [selectedGroupFilter, setSelectedGroupFilter] = React.useState<string[]>(['all']);
 
   // Get session players
   const sessionPlayers = players.filter(p => sessionPlayerIds.includes(p.id));
-  // Players not in session
-  const availablePlayers = players.filter(p => !sessionPlayerIds.includes(p.id));
+  // Players not in session, filtered by group
+  const availablePlayers = React.useMemo(() => {
+    const basePlayers = players.filter(p => !sessionPlayerIds.includes(p.id));
+    if (selectedGroupFilter.includes('all')) {
+      return basePlayers;
+    }
+    
+    // Combine all selected groups' player IDs and remove duplicates
+    const allPlayerIds = new Set<string>();
+    const allGroups = getAllGroups();
+    selectedGroupFilter.forEach(groupId => {
+      const group = allGroups.find(g => g.id === groupId);
+      if (group) {
+        group.playerIds.forEach(playerId => allPlayerIds.add(playerId));
+      }
+    });
+    
+    return basePlayers.filter(player => allPlayerIds.has(player.id));
+  }, [players, sessionPlayerIds, getAllGroups, selectedGroupFilter]);
 
   // Auto-show session drawer when no players are in session
   React.useEffect(() => {
@@ -196,10 +215,30 @@ export default function TeamsScreen() {
     setSelectedIds([]);
   };
 
+  const handleSelectGroupFilter = (groupId: string) => {
+    setSelectedGroupFilter(currentIds => {
+      if (groupId === 'all') {
+        // If "All" is selected, clear other selections
+        return ['all'];
+      }
+      
+      if (currentIds.includes(groupId)) {
+        // Remove from selection
+        const newIds = currentIds.filter(id => id !== groupId);
+        // If no groups selected, default to "All"
+        return newIds.length === 0 ? ['all'] : newIds;
+      } else {
+        // Add to selection, remove "All" if it was selected
+        return [...currentIds.filter(id => id !== 'all'), groupId];
+      }
+    });
+  };
+
   const handleAddSelected = () => {
     setSessionPlayerIds([...sessionPlayerIds, ...selectedIds]);
     setModalVisible(false);
     setSelectedIds([]);
+    setSelectedGroupFilter(['all']);
   };
 
   const handleAddNewPlayer = (data: PlayerFormValues) => {
@@ -405,14 +444,14 @@ export default function TeamsScreen() {
           }}
         />
       <Portal>
-        <Modal visible={modalVisible} onDismiss={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); }} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 
+        <Modal visible={modalVisible} onDismiss={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); setSelectedGroupFilter(['all']); }} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <View style={sharedStyles.modalHeader}>
               <Text variant="titleLarge" style={[sharedStyles.modalTitle, { color: colors.onBackground }]}>Add Players to Session</Text>
               <IconButton
                 icon="close"
                 size={24}
-                onPress={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); }}
+                onPress={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); setSelectedGroupFilter(['all']); }}
                 style={sharedStyles.closeButton}
               />
             </View>
@@ -433,6 +472,18 @@ export default function TeamsScreen() {
                   >
                     Add to Session ({selectedIds.length})
                   </Button>
+                  {/* Group Filter */}
+                  <View style={{ marginBottom: 16 }}>
+                    <Text variant="titleMedium" style={{ color: colors.onBackground, marginBottom: 8 }}>Filter by Group</Text>
+                    <GroupSelector
+                      groups={[]} // Pass empty array since GroupSelector now uses getAllGroups internally
+                      selectedGroupIds={selectedGroupFilter}
+                      onSelectGroup={handleSelectGroupFilter}
+                      style={{ marginVertical: 0 }}
+                      multiSelect={true}
+                    />
+                  </View>
+                  
                   <View style={styles.selectHeader}>
                     <Text variant="titleMedium" style={{ color: colors.onBackground }}>Select Players</Text>
                     <TouchableOpacity

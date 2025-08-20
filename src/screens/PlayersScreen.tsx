@@ -7,26 +7,53 @@ import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import PlayerFormDrawer from '../components/PlayerFormDrawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlayerListItem from '../components/PlayerListItem';
+import GroupSelector from '../components/GroupSelector';
+import GroupForm, { GroupFormValues } from '../components/GroupForm';
 import styles from '../styles/PlayersScreenStyles';
 import { sharedStyles } from '../styles/shared';
-import { Player } from '../models/types';
+import { Player, Group } from '../models/types';
 
 export default function PlayersScreen() {
-  const { players, setPlayers } = useAppState();
+  const { players, setPlayers, groups, setGroups, getAllGroups } = useAppState();
   const [modalVisible, setModalVisible] = React.useState(false);
   const [editPlayerId, setEditPlayerId] = React.useState<string | null>(null);
   const [importModalVisible, setImportModalVisible] = React.useState(false);
   const [exportModalVisible, setExportModalVisible] = React.useState(false);
   const [importText, setImportText] = React.useState('');
   const [importError, setImportError] = React.useState('');
+  const [selectedGroupIds, setSelectedGroupIds] = React.useState<string[]>(['all']);
+  const [groupModalVisible, setGroupModalVisible] = React.useState(false);
+  const [groupManagementModalVisible, setGroupManagementModalVisible] = React.useState(false);
+  const [editGroupId, setEditGroupId] = React.useState<string | null>(null);
   const swipeableRefs = React.useRef<{ [key: string]: any }>({});
   const { height: screenHeight } = Dimensions.get('window');
   const { colors } = useTheme();
 
+  // Filter players based on selected groups
+  const filteredPlayers = React.useMemo(() => {
+    if (selectedGroupIds.includes('all')) {
+      return players;
+    }
+    
+    // Combine all selected groups' player IDs and remove duplicates
+    const allPlayerIds = new Set<string>();
+    const allGroups = getAllGroups();
+    selectedGroupIds.forEach(groupId => {
+      const group = allGroups.find(g => g.id === groupId);
+      if (group) {
+        group.playerIds.forEach(playerId => allPlayerIds.add(playerId));
+      }
+    });
+    
+    return players.filter(player => allPlayerIds.has(player.id));
+  }, [players, getAllGroups, selectedGroupIds]);
+
   const handlePlayerFormSubmit = (data: PlayerFormValues) => {
     if (editPlayerId) {
+      // Update existing player
       setPlayers(players.map(p => p.id === editPlayerId ? { ...p, ...data } : p));
     } else {
+      // Create new player
       const id = Math.random().toString(36).slice(2, 10);
       setPlayers([...players, { id, ...data }]);
     }
@@ -41,6 +68,14 @@ export default function PlayersScreen() {
 
   const handleDeletePlayer = (id: string) => {
     setPlayers(players.filter(p => p.id !== id));
+    // Remove player from all groups (except "All" group which is managed automatically)
+    setGroups(groups.map(group => {
+      if (group.id === 'all') return group; // Don't modify "All" group
+      return {
+        ...group,
+        playerIds: group.playerIds.filter(playerId => playerId !== id)
+      };
+    }));
   };
 
   const handleEditPlayer = (id: string) => {
@@ -51,6 +86,83 @@ export default function PlayersScreen() {
   const handleAddPlayer = () => {
     setEditPlayerId(null);
     setModalVisible(true);
+  };
+
+  const handleGroupFormSubmit = (data: GroupFormValues) => {
+    if (editGroupId) {
+      setGroups(groups.map(g => g.id === editGroupId ? { ...g, ...data } : g));
+    } else {
+      const id = Math.random().toString(36).slice(2, 10);
+      setGroups([...groups, { id, ...data }]);
+    }
+    setGroupModalVisible(false);
+    setEditGroupId(null);
+  };
+
+  const handleGroupFormCancel = () => {
+    setGroupModalVisible(false);
+    setEditGroupId(null);
+  };
+
+  const handleAddGroup = () => {
+    setEditGroupId(null);
+    setGroupModalVisible(true);
+  };
+
+  const handleOpenGroupManagement = () => {
+    setGroupManagementModalVisible(true);
+  };
+
+  const handleEditGroup = (groupId: string) => {
+    setEditGroupId(groupId);
+    setGroupModalVisible(true);
+  };
+
+  const handleSelectGroup = (groupId: string) => {
+    setSelectedGroupIds(currentIds => {
+      if (groupId === 'all') {
+        // If "All" is selected, clear other selections
+        const newIds = ['all'];
+        return newIds;
+      }
+      
+      if (currentIds.includes(groupId)) {
+        // Remove from selection
+        const newIds = currentIds.filter(id => id !== groupId);
+        // If no groups selected, default to "All"
+        const finalIds = newIds.length === 0 ? ['all'] : newIds;
+        return finalIds;
+      } else {
+        // Add to selection, remove "All" if it was selected
+        const newIds = [...currentIds.filter(id => id !== 'all'), groupId];
+        return newIds;
+      }
+    });
+  };
+
+  const handleDeleteGroup = (groupId: string) => {
+    if (groupId === 'all') {
+      Alert.alert('Cannot Delete', 'The "All" group cannot be deleted.');
+      return;
+    }
+    
+    Alert.alert(
+      'Delete Group',
+      'Are you sure you want to delete this group? This will remove all players from the group but won\'t delete the players themselves.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: () => {
+            setGroups(groups.filter(g => g.id !== groupId));
+            if (selectedGroupIds.includes(groupId)) {
+              setSelectedGroupIds(['all']);
+            }
+          }
+        }
+      ]
+    );
   };
 
   // Import/Export functions
@@ -122,6 +234,7 @@ export default function PlayersScreen() {
       });
 
       setPlayers([...players, ...updatedPlayers]);
+      
       setImportModalVisible(false);
       setImportText('');
       setImportError('');
@@ -168,6 +281,12 @@ export default function PlayersScreen() {
           </Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <IconButton
+              icon="account-group"
+              size={24}
+              onPress={handleOpenGroupManagement}
+              style={styles.addButton}
+            />
+            <IconButton
               icon="download"
               size={24}
               onPress={handleExportPlayers}
@@ -181,6 +300,15 @@ export default function PlayersScreen() {
             />
           </View>
         </View>
+
+        {/* Group Selector */}
+        <GroupSelector
+          groups={[]} // Pass empty array since GroupSelector now uses getAllGroups internally
+          selectedGroupIds={selectedGroupIds}
+          onSelectGroup={handleSelectGroup}
+          onAddGroup={handleAddGroup}
+          multiSelect={true}
+        />
         
         {/* Players List */}
         <View style={[styles.playersList, { flex: 1 }]}>
@@ -188,10 +316,10 @@ export default function PlayersScreen() {
             showsVerticalScrollIndicator={false}
             style={{ flex: 1 }}
           >
-            {players.length === 0 ? (
-              <Text>No players saved yet.</Text>
+            {filteredPlayers.length === 0 ? (
+              <Text>No players in this group.</Text>
             ) : (
-              players.map(player => {
+              filteredPlayers.map(player => {
                 const teammate = player.teammatePreference ? players.find(p => p.id === player.teammatePreference) : undefined;
                 return (
                   <Swipeable
@@ -230,6 +358,108 @@ export default function PlayersScreen() {
             onImport={handleImportPlayers}
             showImportButton={!editPlayerId}
           />
+
+          {/* Group Management Modal */}
+          <Modal 
+            visible={groupManagementModalVisible} 
+            onDismiss={() => setGroupManagementModalVisible(false)} 
+            contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}
+          >
+            <View style={sharedStyles.modalHeader}>
+              <Text variant="titleLarge" style={[sharedStyles.modalTitle, { color: colors.onBackground }]}>Manage Groups</Text>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={() => setGroupManagementModalVisible(false)}
+                style={sharedStyles.closeButton}
+              />
+            </View>
+            <ScrollView 
+              style={{ maxHeight: screenHeight * 0.7 }}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={{ padding: 16 }}>
+                <Button 
+                  mode="contained" 
+                  icon="plus"
+                  onPress={() => {
+                    setGroupManagementModalVisible(false);
+                    setTimeout(() => setGroupModalVisible(true), 100);
+                  }}
+                  style={[{ marginBottom: 16 }, sharedStyles.cardBorderRadius]}
+                  buttonColor={colors.primary}
+                  textColor={colors.onPrimary}
+                >
+                  Create New Group
+                </Button>
+                
+                {groups.length === 0 ? (
+                  <Text style={{ textAlign: 'center', fontStyle: 'italic', opacity: 0.6, marginTop: 20 }}>
+                    No groups created yet. Create your first group above.
+                  </Text>
+                ) : (
+                  groups.map(group => (
+                    <View 
+                      key={group.id} 
+                      style={[
+                        styles.groupManagementItem, 
+                        { 
+                          backgroundColor: colors.surface,
+                          borderColor: colors.outline
+                        }
+                      ]}
+                    >
+                      <View style={styles.groupManagementInfo}>
+                        <Text variant="titleMedium" style={{ color: colors.onBackground, fontWeight: '500' }}>
+                          {group.name}
+                        </Text>
+                        <Text variant="bodySmall" style={{ color: colors.onSurfaceVariant }}>
+                          {group.playerIds.length} player{group.playerIds.length !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+                      <View style={styles.groupManagementActions}>
+                        <IconButton
+                          icon="pencil"
+                          size={20}
+                          onPress={() => {
+                            setEditGroupId(group.id);
+                            setGroupManagementModalVisible(false);
+                            setTimeout(() => setGroupModalVisible(true), 100);
+                          }}
+                          iconColor={colors.primary}
+                        />
+                        <IconButton
+                          icon="delete"
+                          size={20}
+                          onPress={() => {
+                            setGroupManagementModalVisible(false);
+                            setTimeout(() => handleDeleteGroup(group.id), 100);
+                          }}
+                          iconColor={colors.error}
+                        />
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
+            </ScrollView>
+          </Modal>
+
+          {/* Group Form Modal */}
+          <Modal 
+            visible={groupModalVisible} 
+            onDismiss={handleGroupFormCancel} 
+            contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}
+          >
+            <GroupForm
+              initialValues={editGroupId ? groups.find(g => g.id === editGroupId) : undefined}
+              onSubmit={handleGroupFormSubmit}
+              onCancel={handleGroupFormCancel}
+              title={editGroupId ? 'Edit Group' : 'Add Group'}
+              submitLabel={editGroupId ? 'Save Changes' : 'Add Group'}
+              players={players}
+            />
+          </Modal>
 
           {/* Import Modal */}
           <Modal visible={importModalVisible} onDismiss={handleImportCancel} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>

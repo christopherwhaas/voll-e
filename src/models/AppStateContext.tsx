@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Player, Team, Settings, AppState, Tournament, STORAGE_KEYS } from './types';
+import { Player, Team, Settings, AppState, STORAGE_KEYS, Group } from './types';
 import { SORT_OPTIONS } from '../utils/constants';
 
 interface AppStateContextProps extends AppState {
@@ -9,6 +9,8 @@ interface AppStateContextProps extends AppState {
   setSettings: (settings: Settings) => void;
   setNumberOfNets: (nets: number) => void;
   setSessionPlayerIds: (ids: string[]) => void;
+  setGroups: (groups: Group[]) => void;
+  getAllGroups: () => Group[];
   // tournaments: Tournament[];
   // setTournaments: (tournaments: Tournament[]) => void;
   loadAppState: () => Promise<void>;
@@ -20,8 +22,14 @@ const defaultSettings: Settings = {
     teammatePreference: 2,
     teamSizePreference: 1
   },
-  darkMode: false,
 };
+
+// Virtual "All" group that includes all players (not stored in AsyncStorage)
+const createVirtualAllGroup = (players: Player[]): Group => ({
+  id: 'all',
+  name: 'All',
+  playerIds: players.map(p => p.id)
+});
 
 const AppStateContext = createContext<AppStateContextProps | undefined>(undefined);
 
@@ -31,6 +39,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [numberOfNets, setNumberOfNets] = useState<number>(1);
   const [sessionPlayerIds, setSessionPlayerIds] = useState<string[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   // const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,9 +48,12 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     try {
       const playersJson = await AsyncStorage.getItem(STORAGE_KEYS.PLAYERS);
       const settingsJson = await AsyncStorage.getItem(STORAGE_KEYS.SETTINGS);
+      const groupsJson = await AsyncStorage.getItem(STORAGE_KEYS.GROUPS);
       // const tournamentsJson = await AsyncStorage.getItem(STORAGE_KEYS.TOURNAMENTS);
       console.log('Loading from AsyncStorage - settingsJson:', settingsJson);
-      if (playersJson) setPlayers(JSON.parse(playersJson));
+      if (playersJson) {
+        setPlayers(JSON.parse(playersJson));
+      }
       if (settingsJson) {
         const parsedSettings = JSON.parse(settingsJson);
         console.log('Parsed settings:', parsedSettings);
@@ -50,12 +62,23 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         console.log('No settings found, using defaults');
         setSettings(defaultSettings);
       }
+      if (groupsJson) {
+        const parsedGroups = JSON.parse(groupsJson);
+        console.log('Loading groups from AsyncStorage:', parsedGroups);
+        // Only load user-created groups (exclude "all" group)
+        const userGroups = parsedGroups.filter((group: Group) => group.id !== 'all');
+        setGroups(userGroups);
+      } else {
+        console.log('No groups found in AsyncStorage');
+        setGroups([]);
+      }
       // if (tournamentsJson) {
       //   setTournaments(JSON.parse(tournamentsJson));
       // }
     } catch (e) {
       console.error('Error loading app state:', e);
       setSettings(defaultSettings);
+      setGroups([]);
     } finally {
       setIsLoading(false);
     }
@@ -79,6 +102,16 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [settings, isLoading]);
 
+  // Persist groups to AsyncStorage
+  useEffect(() => {
+    if (groups.length > 0) {
+      console.log('Saving groups to AsyncStorage:', groups);
+      AsyncStorage.setItem(STORAGE_KEYS.GROUPS, JSON.stringify(groups));
+    }
+  }, [groups]);
+
+
+
   // useEffect(() => {
   //   AsyncStorage.setItem(STORAGE_KEYS.TOURNAMENTS, JSON.stringify(tournaments));
   // }, [tournaments]);
@@ -86,6 +119,12 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   if (isLoading) {
     return null; // or a loading spinner
   }
+
+  // Helper function to get all groups including virtual "All" group
+  const getAllGroups = (): Group[] => {
+    const virtualAllGroup = createVirtualAllGroup(players);
+    return [virtualAllGroup, ...groups];
+  };
 
   return (
     <AppStateContext.Provider
@@ -95,12 +134,15 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         settings: settings || defaultSettings,
         numberOfNets,
         sessionPlayerIds,
+        groups,
+        getAllGroups,
         // tournaments,
         setPlayers,
         setTeams,
         setSettings,
         setNumberOfNets,
         setSessionPlayerIds,
+        setGroups,
         // setTournaments,
         loadAppState,
       }}

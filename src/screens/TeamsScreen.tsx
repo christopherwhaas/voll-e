@@ -1,17 +1,16 @@
 import * as React from 'react';
-import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform, Dimensions, TouchableOpacity } from 'react-native';
+import { View, ScrollView, FlatList, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
 import { Text, Button, Portal, Modal, List, IconButton, Checkbox, Dialog, RadioButton, useTheme, Surface } from 'react-native-paper';
 import { GestureHandlerRootView, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { useAppState } from '../models/AppStateContext';
 import { Player, COLOR_NAMES, SKILL_VALUES, Team, COLOR_MAP } from '../models/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { SCREEN_MARGIN, SORT_OPTIONS, skillLevelEmojis } from '../utils/constants';
-import { sharedStyles, screenHeight } from '../styles/shared';
+import { SCREEN_MARGIN, skillLevelEmojis } from '../utils/constants';
+import { sharedStyles } from '../styles/shared';
 import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import TeamCard from '../components/TeamCard';
 import SettingsDrawer from '../components/SettingsDrawer';
-import TabSelector from '../components/TabSelector';
 import GroupSelector from '../components/GroupSelector';
 import { generateRandomTeams, generateSnakeDraftTeams } from '../utils/teamGeneration';
 import styles from '../styles/TeamsScreenStyles';
@@ -32,7 +31,7 @@ function getRandomColorNames(numTeams: number): string[] {
 }
 
 export default function TeamsScreen() {
-  const { players, sessionPlayerIds, setSessionPlayerIds, teams, setTeams, setPlayers, numberOfNets, setNumberOfNets, settings, setSettings, groups, getAllGroups } = useAppState();
+  const { players, sessionPlayerIds, setSessionPlayerIds, teams, setTeams, setPlayers, numberOfTeams, setNumberOfTeams, settings, setSettings, groups, getAllGroups } = useAppState();
   const [modalVisible, setModalVisible] = React.useState(false);
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [swapDialogVisible, setSwapDialogVisible] = React.useState(false);
@@ -122,7 +121,7 @@ export default function TeamsScreen() {
 
   // Random Team Generation
   const handleRandomTeams = () => {
-    const teamsArr = generateRandomTeams(players.filter(p => sessionPlayerIds.includes(p.id)), numberOfNets, COLOR_NAMES);
+    const teamsArr = generateRandomTeams(players.filter(p => sessionPlayerIds.includes(p.id)), numberOfTeams, COLOR_NAMES);
     setTeams(teamsArr);
     setSessionDrawerExpanded(false);
   };
@@ -132,7 +131,7 @@ export default function TeamsScreen() {
     const weights = settings.weights ?? {skillLevel: 5, teammatePreference: 0, teamSizePreference: 0};
     const teamsArr = generateSnakeDraftTeams(
       players.filter(p => sessionPlayerIds.includes(p.id)),
-      { numberOfNets, weights },
+      { numberOfTeams, weights },
       COLOR_NAMES
     );
     setTeams(teamsArr);
@@ -141,7 +140,7 @@ export default function TeamsScreen() {
 
   // Manual Team Generation
   const handleManualTeams = () => {
-    const teamCount = 2 * numberOfNets;
+    const teamCount = numberOfTeams;
     const colorNames = getRandomColorNames(teamCount);
     const emptyTeams = Array.from({ length: teamCount }, (_, i) => ({
       id: (i + 1).toString(),
@@ -825,7 +824,7 @@ export default function TeamsScreen() {
                   </Text>
                 )}
                 <Text style={[styles.drawerSubtitle, { color: colors.onPrimary }]}>
-                  {sessionPlayers.length} player{sessionPlayers.length !== 1 ? 's' : ''} • {numberOfNets} net{numberOfNets !== 1 ? 's' : ''}
+                  {sessionPlayers.length} player{sessionPlayers.length !== 1 ? 's' : ''} • {numberOfTeams} team{numberOfTeams !== 1 ? 's' : ''}
                 </Text>
               </View>
             </View>
@@ -836,11 +835,11 @@ export default function TeamsScreen() {
                 showsVerticalScrollIndicator={false}
                 nestedScrollEnabled={true}
               >
-                <View style={[styles.netsRow, { backgroundColor: colors.primaryContainer }]}>
-                  <Text style={[styles.netsLabel, { color: colors.onPrimaryContainer }]}>Nets for this session:</Text>
-                  <IconButton icon="minus" size={20} onPress={() => setNumberOfNets(Math.max(1, numberOfNets - 1))} />
-                  <Text style={[styles.netsValue, { color: colors.onPrimaryContainer }]}>{numberOfNets}</Text>
-                  <IconButton icon="plus" size={20} onPress={() => setNumberOfNets(numberOfNets + 1)} />
+                <View style={[styles.teamsRow, { backgroundColor: colors.primaryContainer }]}>
+                  <Text style={[styles.teamsLabel, { color: colors.onPrimaryContainer }]}>Teams for this session:</Text>
+                  <IconButton icon="minus" size={20} onPress={() => setNumberOfTeams(Math.max(1, numberOfTeams - 1))} />
+                  <Text style={[styles.teamsValue, { color: colors.onPrimaryContainer }]}>{numberOfTeams}</Text>
+                  <IconButton icon="plus" size={20} onPress={() => setNumberOfTeams(numberOfTeams + 1)} />
                 </View>
                 
                 <View style={styles.playersSection}>

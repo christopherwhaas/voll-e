@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { View, StyleSheet, Pressable, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { Text, Button, Portal, IconButton, useTheme } from 'react-native-paper';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 

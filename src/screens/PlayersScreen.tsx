@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { View, ScrollView, Dimensions, Alert, Clipboard, Share, Platform } from 'react-native';
-import { Text, List, FAB, Portal, Modal, IconButton, useTheme, Card, Button, TextInput } from 'react-native-paper';
+import { View, ScrollView, Dimensions, Alert, Share } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Text, Portal, Modal, IconButton, useTheme, Button, TextInput } from 'react-native-paper';
 import { useAppState } from '../models/AppStateContext';
 import Swipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
-import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
+import { PlayerFormValues } from '../components/PlayerForm';
 import PlayerFormDrawer from '../components/PlayerFormDrawer';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PlayerListItem from '../components/PlayerListItem';
@@ -11,7 +12,7 @@ import GroupSelector from '../components/GroupSelector';
 import GroupForm, { GroupFormValues } from '../components/GroupForm';
 import styles from '../styles/PlayersScreenStyles';
 import { sharedStyles } from '../styles/shared';
-import { Player, Group } from '../models/types';
+import { Player } from '../models/types';
 
 export default function PlayersScreen() {
   const { players, setPlayers, groups, setGroups, getAllGroups } = useAppState();
@@ -253,7 +254,7 @@ export default function PlayersScreen() {
 
   const handleCopyToClipboard = async () => {
     try {
-      await Clipboard.setString(importText);
+      await Clipboard.setStringAsync(importText);
       Alert.alert('Copied!', 'Player data has been copied to clipboard.');
     } catch (error) {
       Alert.alert('Error', 'Failed to copy to clipboard.');

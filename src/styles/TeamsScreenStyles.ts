@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     padding: 16,
     maxHeight: 400, // Maximum height to prevent going off screen
   },
-  netsRow: {
+  teamsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
@@ -112,12 +112,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
   },
-  netsLabel: {
+  teamsLabel: {
     flex: 1,
     fontSize: 14,
     fontWeight: '500',
   },
-  netsValue: {
+  teamsValue: {
     fontSize: 16,
     fontWeight: 'bold',
     marginHorizontal: 8,

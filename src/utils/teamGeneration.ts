@@ -15,8 +15,8 @@ function getRandomColorNames(numTeams: number, COLOR_NAMES: string[]): string[] 
   }
 }
 
-export function generateRandomTeams(players: Player[], numberOfNets: number, COLOR_NAMES: string[]): Team[] {
-  const numTeams = 2 * numberOfNets;
+export function generateRandomTeams(players: Player[], numberOfTeams: number, COLOR_NAMES: string[]): Team[] {
+  const numTeams = numberOfTeams;
   // Shuffle players
   const shuffled = [...players].sort(() => Math.random() - 0.5);
   // Get random color names
@@ -75,8 +75,8 @@ function euclideanSquared(a: number[], b: number[]): number {
   return a.reduce((sum, ai, i) => sum + (ai - b[i]) ** 2, 0);
 }
 
-export function createBalancedTeams(players: Player[], config: { numberOfNets: number, weights: WeightSetings }, COLOR_NAMES: string[]): Team[] {
-  const teamCount = 2 * config.numberOfNets;
+export function createBalancedTeams(players: Player[], config: { numberOfTeams: number, weights: WeightSetings }, COLOR_NAMES: string[]): Team[] {
+  const teamCount = config.numberOfTeams;
   const teamSize = players.length / teamCount;
   const minTeamSize = Math.floor(teamSize);
   const maxTeamSize = Math.ceil(teamSize);
@@ -139,8 +139,8 @@ export function createBalancedTeams(players: Player[], config: { numberOfNets: n
 }
 
 // Make balanced teams based on average team skill first, then take into account the player preferences
-export function generateSnakeDraftTeams(players: Player[], config: { numberOfNets: number, weights: WeightSetings }, COLOR_NAMES: string[]): Team[] {
-  const numberOfTeams = 2 * config.numberOfNets;
+export function generateSnakeDraftTeams(players: Player[], config: { numberOfTeams: number, weights: WeightSetings }, COLOR_NAMES: string[]): Team[] {
+  const numberOfTeams = config.numberOfTeams;
 
   // Get Team color and name
   const colorNames = getRandomColorNames(numberOfTeams, COLOR_NAMES);
@@ -175,7 +175,7 @@ export function generateSnakeDraftTeams(players: Player[], config: { numberOfNet
 }
 
 // Optional: multi-run optimization
-export function generateBestTeamSet(players: Player[], config: { numberOfNets: number, weights: WeightSetings }, COLOR_NAMES: string[], runs = 5): Team[] {
+export function generateBestTeamSet(players: Player[], config: { numberOfTeams: number, weights: WeightSetings }, COLOR_NAMES: string[], runs = 5): Team[] {
   let bestTeams: Team[] = [];
   let bestScore = Infinity;
   for (let i = 0; i < runs; i++) {

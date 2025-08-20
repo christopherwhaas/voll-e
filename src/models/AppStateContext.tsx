@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Player, Team, Settings, AppState, STORAGE_KEYS, Group } from './types';
-import { SORT_OPTIONS } from '../utils/constants';
 
 interface AppStateContextProps extends AppState {
   setPlayers: (players: Player[]) => void;
   setTeams: (teams: Team[]) => void;
   setSettings: (settings: Settings) => void;
-  setNumberOfNets: (nets: number) => void;
+  setNumberOfTeams: (numTeams: number) => void;
   setSessionPlayerIds: (ids: string[]) => void;
   setGroups: (groups: Group[]) => void;
   getAllGroups: () => Group[];
@@ -18,9 +17,9 @@ interface AppStateContextProps extends AppState {
 
 const defaultSettings: Settings = {
   weights: {
-    skillLevel: 3,
-    teammatePreference: 2,
-    teamSizePreference: 1
+    skillLevel: 5,
+    teammatePreference: 0,
+    teamSizePreference: 0
   },
 };
 
@@ -37,7 +36,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [numberOfNets, setNumberOfNets] = useState<number>(1);
+  const [numberOfTeams, setNumberOfTeams] = useState<number>(1);
   const [sessionPlayerIds, setSessionPlayerIds] = useState<string[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   // const [tournaments, setTournaments] = useState<Tournament[]>([]);
@@ -132,7 +131,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         players,
         teams,
         settings: settings || defaultSettings,
-        numberOfNets,
+        numberOfTeams,
         sessionPlayerIds,
         groups,
         getAllGroups,
@@ -140,7 +139,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         setPlayers,
         setTeams,
         setSettings,
-        setNumberOfNets,
+        setNumberOfTeams,
         setSessionPlayerIds,
         setGroups,
         // setTournaments,

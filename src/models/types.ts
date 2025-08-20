@@ -40,7 +40,7 @@ export interface AppState {
   players: Player[];
   teams: Team[];
   settings: Settings;
-  numberOfNets: number;
+  numberOfTeams: number;
   sessionPlayerIds: string[]; // IDs of players selected for this session
   groups: Group[];
 }

@@ -22,7 +22,7 @@ const schema = yup.object({
   skillLevel: yup.mixed<SkillLevel>().oneOf(skillLevels).required(),
   teamSizePreference: yup.mixed<TeamSize>().oneOf(teamSizes).required(),
   emoji: yup.string().oneOf(EMOJI_LIST).required(),
-  teammatePreference: yup.string().defined(),
+  teammatePreference: yup.string().required(),
 });
 
 export interface PlayerFormValues {
@@ -50,7 +50,7 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
   const { colors } = useTheme();
   const { players, groups } = useAppState();
   const { control, handleSubmit, reset, setValue, watch } = useForm<PlayerFormValues>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as any,
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -237,7 +237,7 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
             )}
           />
           
-          <Button mode="contained" style={[{ marginTop: 12 }, sharedStyles.cardBorderRadius]} onPress={handleSubmit(onSubmit)} buttonColor={colors.primary} textColor={colors.onPrimary}>
+          <Button mode="contained" style={[{ marginTop: 12 }, sharedStyles.cardBorderRadius]} onPress={handleSubmit(onSubmit as any)} buttonColor={colors.primary} textColor={colors.onPrimary}>
             {submitLabel}
           </Button>
           <Button onPress={onCancel} style={[{ marginTop: 8, borderColor: colors.error }, sharedStyles.cardBorderRadius]} textColor={colors.error}>

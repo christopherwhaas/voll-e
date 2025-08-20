@@ -3,7 +3,6 @@ import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Text, IconButton, useTheme } from 'react-native-paper';
 import { Group } from '../models/types';
 import { useAppState } from '../models/AppStateContext';
-import { sharedStyles } from '../styles/shared';
 
 interface GroupSelectorProps {
   groups: Group[];

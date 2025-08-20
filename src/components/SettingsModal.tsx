@@ -1,8 +1,7 @@
 import * as React from 'react';
-import { View, StyleSheet, Keyboard, Pressable, TouchableOpacity, ScrollView } from 'react-native';
-import { Text, Button, Portal, Modal, List, Switch, useTheme, IconButton } from 'react-native-paper';
+import { View, ScrollView } from 'react-native';
+import { Text, Button, Portal, Modal, List, useTheme, IconButton } from 'react-native-paper';
 import Slider from '@react-native-community/slider';
-import { SORT_OPTIONS } from '../utils/constants';
 import { sharedStyles, screenHeight } from '../styles/shared';
 import TabSelector from './TabSelector';
 

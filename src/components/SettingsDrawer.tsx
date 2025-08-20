@@ -1,9 +1,7 @@
 import * as React from 'react';
-import { View, StyleSheet, Keyboard, Pressable, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { Text, Button, Portal, Modal, List, Switch, useTheme, IconButton } from 'react-native-paper';
-import Slider from '@react-native-community/slider';
-import { SORT_OPTIONS } from '../utils/constants';
-import { sharedStyles, screenHeight } from '../styles/shared';
+import { View, StyleSheet, Pressable, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { Text, Button, Portal, List, useTheme, IconButton } from 'react-native-paper';
+import { sharedStyles } from '../styles/shared';
 
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { 

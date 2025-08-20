@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     borderRadius: 6,
     paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingVertical: 4,
     overflow: 'hidden',
     borderWidth: 1,
     textAlign: 'right',

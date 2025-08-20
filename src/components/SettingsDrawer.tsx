@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, StyleSheet, Pressable, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { View, StyleSheet, Pressable, TouchableOpacity, ScrollView, Dimensions, Linking } from 'react-native';
 import { Text, Button, Portal, List, useTheme, IconButton } from 'react-native-paper';
 import { sharedStyles } from '../styles/shared';
 
@@ -9,8 +9,7 @@ import Animated, {
   useAnimatedStyle, 
   withTiming, 
   runOnJS,
-  interpolate,
-  Extrapolate
+  
 } from 'react-native-reanimated';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -282,6 +281,40 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
               </View>
             </List.Section>
 
+            {/* Feedback Section */}
+            <List.Section style={{ marginBottom: 24 }}>
+              <List.Subheader style={{ paddingHorizontal: 0, marginBottom: 16 }}>Support & Feedback</List.Subheader>
+              <TouchableOpacity
+                style={[
+                  styles.feedbackItem,
+                  { backgroundColor: colors.surfaceVariant }
+                ]}
+                onPress={() => {
+                  // Replace this URL with your actual feedback form URL
+                  const feedbackUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdF0AvEWp_XN7P3y4GYA4V3POkMo57urbNFRPsfnzwt5KDJ_g/viewform?usp=sharing&ouid=100211376544081752521';
+                  Linking.openURL(feedbackUrl).catch(err => {
+                    console.error('Error opening feedback form:', err);
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={styles.feedbackContent}>
+                  <View style={styles.feedbackLeft}>
+                    <Text style={{ fontSize: 20, marginRight: 12 }}>📝</Text>
+                    <View>
+                      <Text style={[styles.feedbackTitle, { color: colors.onSurfaceVariant }]}>
+                        Send Feedback
+                      </Text>
+                      <Text style={[styles.feedbackSubtitle, { color: colors.onSurfaceVariant }]}>
+                        Help us improve the app
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 16, color: colors.onSurfaceVariant }}>→</Text>
+                </View>
+              </TouchableOpacity>
+            </List.Section>
+
             <Button 
               mode="contained" 
               onPress={handleSaveSettings} 
@@ -375,5 +408,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
     elevation: 2,
+  },
+  feedbackItem: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 8,
+  },
+  feedbackContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  feedbackLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  feedbackTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  feedbackSubtitle: {
+    fontSize: 14,
+    opacity: 0.7,
   },
 }); 

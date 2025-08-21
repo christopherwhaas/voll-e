@@ -157,21 +157,26 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   
-  // Select Players Modal Styles
+  // Player Selection Styles
   selectHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  selectAllContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  selectAllButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 0,
   },
-  selectAllText: {
-    fontSize: 14,
-    marginLeft: 8,
+  selectAllButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
+
   
   // Fixed Header Style
   fixedHeader: {

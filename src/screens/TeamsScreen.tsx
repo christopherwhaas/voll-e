@@ -12,6 +12,7 @@ import PlayerForm, { PlayerFormValues } from '../components/PlayerForm';
 import TeamCard from '../components/TeamCard';
 import SettingsDrawer from '../components/SettingsDrawer';
 import GroupSelector from '../components/GroupSelector';
+import MultiSelectTabs from '../components/MultiSelectTabs';
 import { generateRandomTeams, generateSnakeDraftTeams } from '../utils/teamGeneration';
 import styles from '../styles/TeamsScreenStyles';
 
@@ -32,8 +33,6 @@ function getRandomColorNames(numTeams: number): string[] {
 
 export default function TeamsScreen() {
   const { players, sessionPlayerIds, setSessionPlayerIds, teams, setTeams, setPlayers, numberOfTeams, setNumberOfTeams, settings, setSettings, groups, getAllGroups } = useAppState();
-  const [modalVisible, setModalVisible] = React.useState(false);
-  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [swapDialogVisible, setSwapDialogVisible] = React.useState(false);
   const [swapPlayer, setSwapPlayer] = React.useState<{ player: Player; fromTeamId: string } | null>(null);
   const [swapTargetPlayer, setSwapTargetPlayer] = React.useState<{ player: Player; teamId: string } | null>(null);
@@ -47,8 +46,6 @@ export default function TeamsScreen() {
   const [unassignedPlayers, setUnassignedPlayers] = React.useState<Player[]>([]);
 
   const [settingsDrawerVisible, setSettingsDrawerVisible] = React.useState(false);
-  // Modal mode: 'select' or 'add'
-  const [modalMode, setModalMode] = React.useState<'select' | 'add'>('select');
   const { colors } = useTheme();
   const swipeableRefs = React.useRef<{ [key: string]: any }>({});
   const [newPlayerModalVisible, setNewPlayerModalVisible] = React.useState(false);
@@ -56,11 +53,10 @@ export default function TeamsScreen() {
 
   // Get session players
   const sessionPlayers = players.filter(p => sessionPlayerIds.includes(p.id));
-  // Players not in session, filtered by group
+  // All players filtered by group (including those already in session)
   const availablePlayers = React.useMemo(() => {
-    const basePlayers = players.filter(p => !sessionPlayerIds.includes(p.id));
     if (selectedGroupFilter.includes('all')) {
-      return basePlayers;
+      return players;
     }
     
     // Combine all selected groups' player IDs and remove duplicates
@@ -73,8 +69,8 @@ export default function TeamsScreen() {
       }
     });
     
-    return basePlayers.filter(player => allPlayerIds.has(player.id));
-  }, [players, sessionPlayerIds, getAllGroups, selectedGroupFilter]);
+    return players.filter(player => allPlayerIds.has(player.id));
+  }, [players, getAllGroups, selectedGroupFilter]);
 
   // Auto-show session drawer when no players are in session
   React.useEffect(() => {
@@ -200,18 +196,25 @@ export default function TeamsScreen() {
     setSessionPlayerIds(sessionPlayerIds.filter(pid => pid !== id));
   };
 
-  const handleToggleSelect = (id: string) => {
-    setSelectedIds(selectedIds.includes(id)
-      ? selectedIds.filter(pid => pid !== id)
-      : [...selectedIds, id]);
+  const handleTogglePlayerSelection = (id: string) => {
+    if (sessionPlayerIds.includes(id)) {
+      // Remove from session
+      setSessionPlayerIds(sessionPlayerIds.filter(pid => pid !== id));
+    } else {
+      // Add to session
+      setSessionPlayerIds([...sessionPlayerIds, id]);
+    }
   };
 
-  const handleSelectAll = () => {
-    setSelectedIds(availablePlayers.map(p => p.id));
+  const handleSelectAllAvailable = () => {
+    const availablePlayerIds = availablePlayers.map(p => p.id);
+    const newSessionPlayerIds = [...new Set([...sessionPlayerIds, ...availablePlayerIds])];
+    setSessionPlayerIds(newSessionPlayerIds);
   };
 
-  const handleUnselectAll = () => {
-    setSelectedIds([]);
+  const handleUnselectAllAvailable = () => {
+    const availablePlayerIds = availablePlayers.map(p => p.id);
+    setSessionPlayerIds(sessionPlayerIds.filter(id => !availablePlayerIds.includes(id)));
   };
 
   const handleSelectGroupFilter = (groupId: string) => {
@@ -233,25 +236,16 @@ export default function TeamsScreen() {
     });
   };
 
-  const handleAddSelected = () => {
-    setSessionPlayerIds([...sessionPlayerIds, ...selectedIds]);
-    setModalVisible(false);
-    setSelectedIds([]);
-    setSelectedGroupFilter(['all']);
-  };
-
   const handleAddNewPlayer = (data: PlayerFormValues) => {
     const id = Math.random().toString(36).slice(2, 10);
     const player = { id, ...data };
     setPlayers([...players, player]);
     setSessionPlayerIds([...sessionPlayerIds, id]);
     setNewPlayerModalVisible(false);
-    setModalMode('select');
   };
 
   const handleCancelNewPlayer = () => {
     setNewPlayerModalVisible(false);
-    setModalMode('select');
   };
 
   const handleEditTeamName = (teamId: string, newName: string) => {
@@ -443,108 +437,6 @@ export default function TeamsScreen() {
           }}
         />
       <Portal>
-        <Modal visible={modalVisible} onDismiss={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); setSelectedGroupFilter(['all']); }} contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}> 
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <View style={sharedStyles.modalHeader}>
-              <Text variant="titleLarge" style={[sharedStyles.modalTitle, { color: colors.onBackground }]}>Add Players to Session</Text>
-              <IconButton
-                icon="close"
-                size={24}
-                onPress={() => { setModalVisible(false); setSelectedIds([]); setModalMode('select'); setSelectedGroupFilter(['all']); }}
-                style={sharedStyles.closeButton}
-              />
-            </View>
-            <ScrollView 
-              keyboardShouldPersistTaps="never" 
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={sharedStyles.modalContentStyle}
-              style={sharedStyles.modalScrollView}
-            >
-              {modalMode === 'select' ? (
-                <>
-                  <Button 
-                    mode="outlined" 
-                    style={[{ marginBottom: 16 }, sharedStyles.cardBorderRadius]} 
-                    onPress={handleAddSelected} 
-                    disabled={selectedIds.length === 0} 
-                    textColor={colors.secondary}
-                  >
-                    Add to Session ({selectedIds.length})
-                  </Button>
-                  {/* Group Filter */}
-                  <View style={{ marginBottom: 16 }}>
-                    <Text variant="titleMedium" style={{ color: colors.onBackground, marginBottom: 8 }}>Filter by Group</Text>
-                    <GroupSelector
-                      groups={[]} // Pass empty array since GroupSelector now uses getAllGroups internally
-                      selectedGroupIds={selectedGroupFilter}
-                      onSelectGroup={handleSelectGroupFilter}
-                      style={{ marginVertical: 0 }}
-                      multiSelect={true}
-                    />
-                  </View>
-                  
-                  <View style={styles.selectHeader}>
-                    <Text variant="titleMedium" style={{ color: colors.onBackground }}>Select Players</Text>
-                    <TouchableOpacity
-                      style={styles.selectAllContainer}
-                      onPress={() => {
-                        if (selectedIds.length === availablePlayers.length) {
-                          handleUnselectAll();
-                        } else {
-                          handleSelectAll();
-                        }
-                      }}
-                    >
-                      <Checkbox
-                        status={selectedIds.length === availablePlayers.length && availablePlayers.length > 0 ? 'checked' : 'unchecked'}
-                        disabled={true}
-                        color={colors.primary}
-                      />
-                      <Text style={[styles.selectAllText, { color: colors.onSurfaceVariant }]}>
-                        {selectedIds.length === availablePlayers.length && availablePlayers.length > 0 ? 'Unselect All' : 'Select All'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  {availablePlayers.length === 0 ? (
-                    <Text>No available players. Add a new player below.</Text>
-                  ) : (
-                    availablePlayers.map(player => (
-                      <List.Item
-                        key={player.id}
-                        title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
-                        left={props => (
-                          <Text style={{ fontSize: 24, marginLeft: 8 }}>{player.emoji || '👤'}</Text>
-                        )}
-                        right={props => (
-                          <Checkbox
-                            status={selectedIds.includes(player.id) ? 'checked' : 'unchecked'}
-                            onPress={() => handleToggleSelect(player.id)}
-                          />
-                        )}
-                        onPress={() => handleToggleSelect(player.id)}
-                      />
-                    ))
-                  )}
-                  <View style={{ alignItems: 'center', marginTop: 16 }}>
-                    <IconButton
-                      icon="plus"
-                      size={32}
-                      onPress={() => setModalMode('add')}
-                      style={{ margin: 0 }}
-                    />
-                  </View>
-                </>
-              ) : (
-                <PlayerForm
-                  onSubmit={handleAddNewPlayer}
-                  onCancel={handleCancelNewPlayer}
-                  title="Add New Player"
-                  submitLabel="Save Player"
-                />
-              )}
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </Modal>
         <Dialog visible={swapDialogVisible} onDismiss={() => setSwapDialogVisible(false)} style={[{ backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}>
           <Dialog.Title style={{ color: colors.onBackground }}>Swap Players</Dialog.Title>
           <Dialog.Content>
@@ -787,6 +679,37 @@ export default function TeamsScreen() {
             darkMode: settings.darkMode ?? false
           }}
         />
+        <Modal 
+          visible={newPlayerModalVisible} 
+          onDismiss={() => setNewPlayerModalVisible(false)} 
+          contentContainerStyle={[sharedStyles.modalStyle, { backgroundColor: colors.background }, sharedStyles.cardBorderRadius]}
+        >
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <View style={sharedStyles.modalHeader}>
+              <Text variant="titleLarge" style={[sharedStyles.modalTitle, { color: colors.onBackground }]}>Add New Player</Text>
+              <IconButton
+                icon="close"
+                size={24}
+                onPress={() => setNewPlayerModalVisible(false)}
+                style={sharedStyles.closeButton}
+              />
+            </View>
+            <ScrollView 
+              keyboardShouldPersistTaps="never" 
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={sharedStyles.modalContentStyle}
+              style={sharedStyles.modalScrollView}
+            >
+              <PlayerForm
+                onSubmit={handleAddNewPlayer}
+                onCancel={handleCancelNewPlayer}
+                title="Add New Player"
+                submitLabel="Save Player"
+                hideHeader={true}
+              />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </Modal>
       </Portal>
       
       {/* Session Drawer */}
@@ -842,38 +765,61 @@ export default function TeamsScreen() {
                   <IconButton icon="plus" size={20} onPress={() => setNumberOfTeams(numberOfTeams + 1)} />
                 </View>
                 
-                <View style={styles.playersSection}>
-                  <View style={styles.playersHeader}>
-                    <Text style={[styles.playersTitle, { color: colors.onPrimary }]}>Session Players</Text>
-                    <IconButton
-                      icon="plus"
-                      size={24}
-                      onPress={() => setModalVisible(true)}
-                      style={styles.addButton}
-                      iconColor={colors.onPrimary}
-                    />
-                  </View>
-                  
-                  {sessionPlayers.length === 0 ? (
-                    <Text style={[styles.emptyText, { color: colors.onPrimary }]}>
-                      No players selected for this session.
-                    </Text>
-                  ) : (
-                    sessionPlayers.map(player => (
-                      <View key={player.id} style={[styles.playerItem, { backgroundColor: colors.primaryContainer }]}>
-                        <Text style={{ fontSize: 20, marginRight: 8 }}>{player.emoji || '👤'}</Text>
-                        <Text style={[styles.playerName, { color: colors.onPrimaryContainer }]}>
-                          {player.firstName}{player.lastName ? ` ${player.lastName}` : ''}
+                {/* Group Filter */}
+                <View style={{ marginBottom: 16, paddingHorizontal: 16 }}>
+                  <Text variant="titleMedium" style={{ color: colors.onPrimary, marginBottom: 8 }}>Filter by Group</Text>
+                  <GroupSelector
+                    groups={[]} // Pass empty array since GroupSelector now uses getAllGroups internally
+                    selectedGroupIds={selectedGroupFilter}
+                    onSelectGroup={handleSelectGroupFilter}
+                    style={{ marginVertical: 0 }}
+                    multiSelect={true}
+                    inverseColors={true}
+                  />
+                </View>
+                
+                {/* Player Selection */}
+                <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+                  <View style={styles.selectHeader}>
+                    <Text variant="titleMedium" style={{ color: colors.onPrimary }}>Select Players</Text>
+                    {availablePlayers.length > 0 && (
+                      <TouchableOpacity
+                        style={[
+                          styles.selectAllButton,
+                          { 
+                            backgroundColor: 'transparent'
+                          }
+                        ]}
+                        onPress={() => {
+                          const availableInSession = availablePlayers.filter(p => sessionPlayerIds.includes(p.id));
+                          if (availableInSession.length === availablePlayers.length) {
+                            handleUnselectAllAvailable();
+                          } else {
+                            handleSelectAllAvailable();
+                          }
+                        }}
+                      >
+                        <Text style={[styles.selectAllButtonText, { color: colors.onPrimary }]}>
+                          {availablePlayers.filter(p => sessionPlayerIds.includes(p.id)).length === availablePlayers.length ? 'Clear' : 'Select All'}
                         </Text>
-                        <IconButton
-                          icon="close"
-                          size={20}
-                          onPress={() => handleRemoveFromSession(player.id)}
-                          iconColor={colors.error}
-                        />
-                      </View>
-                    ))
-                  )}
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                  <MultiSelectTabs
+                    items={availablePlayers.map(player => ({
+                      id: player.id,
+                      label: `${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`,
+                      emoji: player.emoji || '👤'
+                    }))}
+                    selectedIds={sessionPlayerIds}
+                    onToggleItem={handleTogglePlayerSelection}
+                    style={{ marginBottom: 8 }}
+                    showAddButton={true}
+                    onAddPress={() => setNewPlayerModalVisible(true)}
+                    addButtonLabel="Add Player"
+                    addButtonEmoji="➕"
+                    inverseColors={true}
+                  />
                 </View>
               </ScrollView>
             )}

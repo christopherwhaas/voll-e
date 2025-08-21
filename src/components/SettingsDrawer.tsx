@@ -64,12 +64,6 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
     }
   }, [visible]);
 
-  const handleSaveSettings = () => {
-    const newSettings = { weights, darkMode };
-    onSave(newSettings);
-    handleDismiss();
-  };
-
   const handleDismiss = () => {
     translateX.value = withTiming(DRAWER_WIDTH, { duration: 300 }, () => {
       runOnJS(onDismiss)();
@@ -108,9 +102,9 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
 
       {/* Drawer */}
       <Animated.View style={[styles.drawer, drawerAnimatedStyle]}>
-        <SafeAreaView style={[styles.drawerContent, { backgroundColor: colors.background }]} edges={['top', 'right']}>
+        <View style={[styles.drawerContent, { backgroundColor: colors.background }]}>
           {/* Header */}
-          <View style={[styles.drawerHeader, { paddingTop: insets.top > 0 ? 0 : 20 }]}>
+          <View style={[styles.drawerHeader, { paddingTop: Math.max(insets.top, 20) + 20 }]}>
             <Text variant="titleLarge" style={[styles.drawerTitle, { color: colors.onBackground }]}>
               Settings
             </Text>
@@ -128,9 +122,8 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
             style={styles.drawerScrollView}
             contentContainerStyle={styles.drawerScrollContent}
           >
-            <List.Section style={{ marginBottom: 24 }}>
-              <List.Subheader style={{ paddingHorizontal: 0, marginBottom: 16 }}>App Appearance</List.Subheader>
-              <View style={[sharedStyles.settingRow, { marginBottom: 16 }]}>
+            <List.Section style={{ marginBottom: 12 }}>
+              <View style={[sharedStyles.settingRow, { marginBottom: 0 }]}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{ fontSize: 16, marginRight: 8 }}>☀️</Text>
@@ -171,7 +164,7 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
                 backgroundColor: colors.surfaceVariant, 
                 padding: 16, 
                 borderRadius: 8, 
-                marginBottom: 20,
+                marginBottom: 10,
                 borderLeftWidth: 4,
                 borderLeftColor: colors.primary
               }}>
@@ -180,17 +173,17 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
                   lineHeight: 20,
                   fontStyle: 'italic'
                 }}>
-                  ⚠️ This feature is coming in a future release. For now, team generation only accounts for skill level distributions.
+                  ⚠️ Dynamic preferences are coming soon. For now, team generation only uses skill level.
                 </Text>
               </View>
               
-              <View style={[sharedStyles.settingRow, { marginBottom: 12, opacity: 0.5 }]}>
+              <View style={[sharedStyles.settingRow, { marginBottom: 0, opacity: 0.5 }]}>
                 <Text variant="bodyMedium" style={[sharedStyles.settingLabel, { color: colors.onSurfaceVariant }]}>Skill Level</Text>
                 <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, fontWeight: 'bold', marginLeft: 8 }}>
                   {weights.skillLevel}
                 </Text>
               </View>
-              <View style={{ height: 40, marginBottom: 24, justifyContent: 'center' }}>
+              <View style={{ height: 40, marginBottom: 12, justifyContent: 'center' }}>
                 <View style={{ 
                   height: 4, 
                   backgroundColor: colors.surfaceVariant, 
@@ -216,13 +209,13 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
                 </View>
               </View>
 
-              <View style={[sharedStyles.settingRow, { marginBottom: 12, opacity: 0.5 }]}>
+              <View style={[sharedStyles.settingRow, { marginBottom: 0, opacity: 0.5 }]}>
                 <Text variant="bodyMedium" style={[sharedStyles.settingLabel, { color: colors.onSurfaceVariant }]}>Teammate Preference</Text>
                 <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, fontWeight: 'bold', marginLeft: 8 }}>
                   {weights.teammatePreference}
                 </Text>
               </View>
-              <View style={{ height: 40, marginBottom: 24, justifyContent: 'center' }}>
+              <View style={{ height: 40, marginBottom: 12, justifyContent: 'center' }}>
                 <View style={{ 
                   height: 4, 
                   backgroundColor: colors.surfaceVariant, 
@@ -248,13 +241,13 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
                 </View>
               </View>
 
-              <View style={[sharedStyles.settingRow, { marginBottom: 12, opacity: 0.5 }]}>
+              <View style={[sharedStyles.settingRow, { marginBottom: 0, opacity: 0.5 }]}>
                 <Text variant="bodyMedium" style={[sharedStyles.settingLabel, { color: colors.onSurfaceVariant }]}>Team Size Preference</Text>
                 <Text variant="bodyMedium" style={{ color: colors.onSurfaceVariant, fontWeight: 'bold', marginLeft: 8 }}>
                   {weights.teamSizePreference}
                 </Text>
               </View>
-              <View style={{ height: 40, marginBottom: 24, justifyContent: 'center' }}>
+              <View style={{ height: 40, marginBottom: 12, justifyContent: 'center' }}>
                 <View style={{ 
                   height: 4, 
                   backgroundColor: colors.surfaceVariant, 
@@ -314,18 +307,8 @@ export default function SettingsDrawer({ visible, onDismiss, settings, onSave }:
                 </View>
               </TouchableOpacity>
             </List.Section>
-
-            <Button 
-              mode="contained" 
-              onPress={handleSaveSettings} 
-              style={[{ marginTop: 32, marginBottom: 16 }, sharedStyles.cardBorderRadius]} 
-              buttonColor={colors.primary} 
-              textColor={colors.onPrimary}
-            >
-              Save Settings
-            </Button>
           </ScrollView>
-        </SafeAreaView>
+        </View>
       </Animated.View>
 
 

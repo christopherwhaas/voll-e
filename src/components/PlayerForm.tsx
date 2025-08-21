@@ -22,7 +22,7 @@ const schema = yup.object({
   skillLevel: yup.mixed<SkillLevel>().oneOf(skillLevels).required(),
   teamSizePreference: yup.mixed<TeamSize>().oneOf(teamSizes).required(),
   emoji: yup.string().oneOf(EMOJI_LIST).required(),
-  teammatePreference: yup.string().required(),
+  teammatePreference: yup.string().optional().nullable(),
 });
 
 export interface PlayerFormValues {
@@ -49,7 +49,9 @@ interface PlayerFormProps {
 export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 'Add Player', submitLabel = 'Save Player', onImport, showImportButton = false, hideHeader = false, fullHeight = false }: PlayerFormProps) {
   const { colors } = useTheme();
   const { players, groups } = useAppState();
-  const { control, handleSubmit, reset, setValue, watch } = useForm<PlayerFormValues>({
+  const [formError, setFormError] = React.useState<string | null>(null);
+  
+  const { control, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<PlayerFormValues>({
     resolver: yupResolver(schema) as any,
     defaultValues: {
       firstName: '',
@@ -76,6 +78,23 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
   // Dropdown menu state and width for teammate preference
   const [teammateMenuVisible, setTeammateMenuVisible] = React.useState(false);
   const [teammateMenuWidth, setTeammateMenuWidth] = React.useState(0);
+
+  // Custom submit handler with error feedback
+  const handleFormSubmit = (data: PlayerFormValues) => {
+    setFormError(null); // Clear any previous errors
+    
+    try {
+      // Validate the data
+      schema.validateSync(data);
+      
+      // If validation passes, call the onSubmit handler
+      onSubmit(data);
+    } catch (validationError: any) {
+      // Show validation error to user
+      setFormError(validationError.message || 'Please check your input and try again.');
+      console.error('Form validation error:', validationError);
+    }
+  };
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={fullHeight ? { flex: 1 } : undefined}>
@@ -110,13 +129,20 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
             control={control}
             name="firstName"
             render={({ field: { onChange, value }, fieldState: { error } }) => (
-              <TextInput
-                label="First Name"
-                value={value}
-                onChangeText={onChange}
-                error={!!error}
-                style={styles.input}
-              />
+              <View>
+                <TextInput
+                  label="First Name"
+                  value={value}
+                  onChangeText={onChange}
+                  error={!!error}
+                  style={styles.input}
+                />
+                {error && (
+                  <Text style={[styles.fieldErrorText, { color: colors.error }]}>
+                    {error.message}
+                  </Text>
+                )}
+              </View>
             )}
           />
           <Controller
@@ -219,25 +245,43 @@ export default function PlayerForm({ initialValues, onSubmit, onCancel, title = 
                           : 'None'}
                       </Button>
                     }
-                    contentStyle={{ width: teammateMenuWidth }}
+                    contentStyle={{ 
+                      width: teammateMenuWidth,
+                      maxHeight: 300 // Set max height for scrollable menu
+                    }}
                   >
-                    <Menu.Item onPress={() => { onChange(''); setTeammateMenuVisible(false); }} title="None" />
-                    {players
-                      .filter(p => !currentId || p.id !== currentId)
-                      .map(p => (
-                        <Menu.Item
-                          key={p.id}
-                          onPress={() => { onChange(p.id); setTeammateMenuVisible(false); }}
-                          title={`${p.emoji || ''} ${p.firstName}${p.lastName ? ` ${p.lastName}` : ''}`}
-                        />
-                      ))}
+                    <ScrollView 
+                      nestedScrollEnabled={true}
+                      showsVerticalScrollIndicator={true}
+                      style={{ maxHeight: 280 }} // Slightly less than contentStyle maxHeight
+                    >
+                      <Menu.Item onPress={() => { onChange(''); setTeammateMenuVisible(false); }} title="None" />
+                      {players
+                        .filter(p => !currentId || p.id !== currentId)
+                        .map(p => (
+                          <Menu.Item
+                            key={p.id}
+                            onPress={() => { onChange(p.id); setTeammateMenuVisible(false); }}
+                            title={`${p.emoji || ''} ${p.firstName}${p.lastName ? ` ${p.lastName}` : ''}`}
+                          />
+                        ))}
+                    </ScrollView>
                   </Menu>
                 </View>
               </List.Section>
             )}
           />
           
-          <Button mode="contained" style={[{ marginTop: 12 }, sharedStyles.cardBorderRadius]} onPress={handleSubmit(onSubmit as any)} buttonColor={colors.primary} textColor={colors.onPrimary}>
+          {/* Error Display */}
+          {formError && (
+            <View style={[styles.errorContainer, { backgroundColor: colors.errorContainer, borderColor: colors.error }]}>
+              <Text style={[styles.errorText, { color: colors.onErrorContainer }]}>
+                ⚠️ {formError}
+              </Text>
+            </View>
+          )}
+          
+          <Button mode="contained" style={[{ marginTop: 12 }, sharedStyles.cardBorderRadius]} onPress={handleSubmit(handleFormSubmit)} buttonColor={colors.primary} textColor={colors.onPrimary}>
             {submitLabel}
           </Button>
           <Button onPress={onCancel} style={[{ marginTop: 8, borderColor: colors.error }, sharedStyles.cardBorderRadius]} textColor={colors.error}>
@@ -265,4 +309,20 @@ const styles = StyleSheet.create({
   },
   input: { marginBottom: 12 },
   tabSelector: { marginBottom: 12 },
+  errorContainer: {
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  fieldErrorText: {
+    fontSize: 12,
+    marginTop: -8,
+    marginBottom: 8,
+    marginLeft: 12,
+  },
 }); 

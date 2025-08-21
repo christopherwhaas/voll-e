@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
-import { Text, Button, TextInput, List, Checkbox, useTheme } from 'react-native-paper';
+import { Text, Button, TextInput, useTheme } from 'react-native-paper';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { Group, Player } from '../models/types';
 import { useAppState } from '../models/AppStateContext';
 import { sharedStyles } from '../styles/shared';
+import MultiSelectTabs from './MultiSelectTabs';
 
 const schema = yup.object({
   name: yup.string().required('Group name is required'),
@@ -137,22 +138,24 @@ export default function GroupForm({
             </View>
           </View>
 
-          {players.map(player => (
-            <List.Item
-              key={player.id}
-              title={`${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`}
-              left={props => (
-                <Text style={{ fontSize: 24, marginLeft: 8 }}>{player.emoji || '👤'}</Text>
-              )}
-              right={props => (
-                <Checkbox
-                  status={selectedPlayerIds?.includes(player.id) ? 'checked' : 'unchecked'}
-                  onPress={() => handleTogglePlayer(player.id)}
-                />
-              )}
-              onPress={() => handleTogglePlayer(player.id)}
-            />
-          ))}
+          <MultiSelectTabs
+            items={players.map(player => ({
+              id: player.id,
+              label: `${player.firstName}${player.lastName ? ` ${player.lastName}` : ''}`,
+              emoji: player.emoji || '👤'
+            }))}
+            selectedIds={selectedPlayerIds || []}
+            onToggleItem={handleTogglePlayer}
+            style={{ marginTop: 8 }}
+            fontSize={12}
+            fontWeight="500"
+            paddingHorizontal={2}
+            paddingVertical={8}
+            borderRadius={20}
+            emojiSize={14}
+            checkmarkSize={8}
+            gap={4}
+          />
         </View>
 
         <Button 

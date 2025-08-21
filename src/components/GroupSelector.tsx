@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { Text, IconButton, useTheme } from 'react-native-paper';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { IconButton, useTheme } from 'react-native-paper';
 import { Group } from '../models/types';
 import { useAppState } from '../models/AppStateContext';
+import MultiSelectTabs from './MultiSelectTabs';
 
 interface GroupSelectorProps {
   groups: Group[];
@@ -11,6 +12,7 @@ interface GroupSelectorProps {
   onAddGroup?: () => void;
   style?: any;
   multiSelect?: boolean;
+  inverseColors?: boolean;
 }
 
 export default function GroupSelector({ 
@@ -19,68 +21,38 @@ export default function GroupSelector({
   onSelectGroup, 
   onAddGroup,
   style,
-  multiSelect = false
+  multiSelect = false,
+  inverseColors = false
 }: GroupSelectorProps) {
   const { colors } = useTheme();
   const { getAllGroups } = useAppState();
   const allGroups = getAllGroups();
 
+  const groupItems = allGroups.map(group => ({
+    id: group.id,
+    label: group.name,
+  }));
+
   return (
     <View style={[styles.container, style]}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {allGroups.map((group) => (
-          <TouchableOpacity
-            key={group.id}
-            style={[
-              styles.groupTab,
-              { 
-                backgroundColor: selectedGroupIds.includes(group.id) ? colors.primary : colors.surface,
-                borderColor: colors.outline
-              }
-            ]}
-            onPress={() => onSelectGroup(group.id)}
-          >
-            <Text 
-              style={[
-                styles.groupText,
-                { 
-                  color: selectedGroupIds.includes(group.id) ? colors.onPrimary : colors.onSurface 
-                }
-              ]}
-            >
-              {group.name}
-              {selectedGroupIds.includes(group.id) && selectedGroupIds.length > 1 && (
-                <Text style={{ fontSize: 10, opacity: 0.8 }}> ✓</Text>
-              )}
-            </Text>
-          </TouchableOpacity>
-        ))}
-        
-        {/* Add Group Button */}
-        {onAddGroup && (
-          <TouchableOpacity
-            style={[
-              styles.addGroupTab,
-              { 
-                backgroundColor: colors.surface,
-                borderColor: colors.outline
-              }
-            ]}
-            onPress={onAddGroup}
-          >
-            <IconButton
-              icon="plus"
-              size={20}
-              iconColor={colors.primary}
-              style={styles.addIcon}
-            />
-          </TouchableOpacity>
-        )}
-      </ScrollView>
+      <MultiSelectTabs
+        items={groupItems}
+        selectedIds={selectedGroupIds}
+        onToggleItem={onSelectGroup}
+        horizontal={true}
+        style={style}
+        fontSize={16}
+        fontWeight="bold"
+        checkmarkSize={10}
+        paddingHorizontal={16}
+        paddingVertical={10}
+        borderRadius={24}
+        gap={8}
+        showAddButton={!!onAddGroup}
+        onAddPress={onAddGroup}
+        noCheckboxIds={['all']}
+        inverseColors={inverseColors}
+      />
     </View>
   );
 }
